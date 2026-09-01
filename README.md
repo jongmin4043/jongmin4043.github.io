@@ -21,10 +21,12 @@ HTML, CSS, and JavaScript, so no build step or package installation is required.
 - `script.js` — reveal animation, navigation state, and pointer glow
 - `favicon.svg` — browser tab icon
 
-## Before publishing
+## Contact links
 
-The GitHub profile links currently point to `https://github.com/jongmin4043`.
-If `jongmin4043` is not your GitHub username, replace that address in `index.html`.
+The contact panel includes public links for:
 
-The supplied email address is intentionally not displayed publicly. Add a contact
-link only if you are comfortable exposing it on a public website.
+- GitHub: `https://github.com/jongmin4043`
+- Instagram: `https://instagram.com/j0nmlnns_`
+- Email: `jongmin4043@snu.ac.kr`
+
+Update these values in `index.html` if any account details change.
