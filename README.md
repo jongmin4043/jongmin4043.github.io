@@ -17,6 +17,9 @@ HTML, CSS, and JavaScript, so no build step or package installation is required.
 ## Files
 
 - `index.html` — page content and structure
+- `data-pipeline.html` — Data Pipeline project detail page
+- `testing-machine.html` — Testing Machine project detail page
+- `quant-upcoming.html` — placeholder for upcoming quant projects
 - `style.css` — all visual styling and responsive layouts
 - `script.js` — reveal animation, navigation state, and pointer glow
 - `favicon.svg` — browser tab icon
