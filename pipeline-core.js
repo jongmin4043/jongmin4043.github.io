@@ -41,6 +41,40 @@
       .slice(-Math.max(1, maxCandles));
   };
 
+  const aggregateCandles = (candles, intervalMinutes = 5) => {
+    const minutes = Math.max(1, Math.floor(Number(intervalMinutes) || 1));
+    const intervalMs = minutes * 60_000;
+    const normalized = mergeCandles([], candles, Math.max(1, candles.length));
+    const buckets = new Map();
+
+    normalized.forEach((candle) => {
+      const bucketTime = Math.floor(candle.time / intervalMs) * intervalMs;
+      const existing = buckets.get(bucketTime);
+
+      if (!existing) {
+        buckets.set(bucketTime, {
+          ...candle,
+          time: bucketTime,
+          sampleCount: 1,
+        });
+        return;
+      }
+
+      existing.high = Math.max(existing.high, candle.high);
+      existing.low = Math.min(existing.low, candle.low);
+      existing.close = candle.close;
+      existing.volume += candle.volume;
+      existing.sampleCount += 1;
+      const latestCollectedAt = Math.max(
+        Number(existing.collectedAt) || 0,
+        Number(candle.collectedAt) || 0,
+      );
+      existing.collectedAt = latestCollectedAt || null;
+    });
+
+    return [...buckets.values()].sort((left, right) => left.time - right.time);
+  };
+
   const seededRandom = (seed) => {
     let value = seed >>> 0;
     return () => {
@@ -94,6 +128,7 @@
   };
 
   const api = {
+    aggregateCandles,
     generateDemoCandles,
     mergeCandles,
     nextDemoCandle,

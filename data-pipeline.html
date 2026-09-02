@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A live 1-minute market-data pipeline and paper-trading dashboard by Jongmin Park."
+      content="A live 5-minute market-data view and paper-trading dashboard by Jongmin Park."
     />
     <meta name="theme-color" content="#080a0f" />
     <title>Data Pipeline — Jongmin Park</title>
@@ -18,9 +18,9 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
-    <script src="pipeline-config.js" defer></script>
-    <script src="pipeline-core.js" defer></script>
-    <script src="data-pipeline-chart.js" defer></script>
+    <script src="pipeline-config.js?v=5m-1" defer></script>
+    <script src="pipeline-core.js?v=5m-1" defer></script>
+    <script src="data-pipeline-chart.js?v=5m-1" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
@@ -43,7 +43,7 @@
         <div>
           <a class="detail-back reveal" href="index.html#data-pipeline">← Quant Development</a>
           <p class="pipeline-kicker reveal"><span>01</span> Market data infrastructure</p>
-          <h1 id="pipeline-title" class="reveal">One-minute market state,<br /><em>kept in motion.</em></h1>
+          <h1 id="pipeline-title" class="reveal">Five-minute market state,<br /><em>kept in motion.</em></h1>
         </div>
         <p class="pipeline-lede reveal">
           A serverless collection pipeline for completed 1-minute candles, designed to
@@ -56,8 +56,8 @@
           <div class="pipeline-symbol">
             <div class="pipeline-symbol-mark" aria-hidden="true">SS</div>
             <div>
-              <span class="pipeline-overline">KRX · 005930</span>
-              <h2>Samsung Electronics</h2>
+              <span class="pipeline-overline" id="pipeline-symbol-overline">DEMO · NOT MARKET DATA</span>
+              <h2 id="pipeline-symbol-name">Synthetic 5-minute preview</h2>
             </div>
           </div>
           <div class="pipeline-head-actions">
@@ -80,7 +80,7 @@
             <small>shares</small>
           </div>
           <div>
-            <span>Last candle</span>
+            <span>5m candle</span>
             <strong id="metric-time">—</strong>
             <small>Asia/Seoul</small>
           </div>
@@ -94,8 +94,8 @@
         <div class="pipeline-chart-panel">
           <div class="pipeline-chart-tools">
             <div class="pipeline-timeframes" aria-label="Chart timeframe">
-              <button type="button" class="is-active" aria-pressed="true">1m</button>
-              <span>Completed candles</span>
+              <button type="button" class="is-active" aria-pressed="true">5m</button>
+              <span>Aggregated from completed 1m bars</span>
             </div>
             <div class="pipeline-legend" aria-label="Chart legend">
               <span><i class="legend-up"></i>Up</span>
@@ -105,7 +105,7 @@
             </div>
           </div>
           <div class="pipeline-canvas-wrap" id="pipeline-canvas-wrap">
-            <canvas id="pipeline-chart" aria-label="One-minute candlestick chart"></canvas>
+            <canvas id="pipeline-chart" aria-label="Five-minute candlestick chart"></canvas>
             <div class="pipeline-tooltip" id="pipeline-tooltip" role="status" aria-live="polite"></div>
           </div>
           <div class="pipeline-stream-state" role="status" aria-live="polite">
@@ -153,7 +153,8 @@
           </div>
           <dl class="pipeline-health-list">
             <div><dt>Mode</dt><dd id="health-mode">Demo</dd></div>
-            <div><dt>Interval</dt><dd>1 minute</dd></div>
+            <div><dt>Chart interval</dt><dd>5 minutes</dd></div>
+            <div><dt>Source interval</dt><dd>1 minute</dd></div>
             <div><dt>Duplicate guard</dt><dd class="health-good">Enabled</dd></div>
             <div><dt>Incomplete bars</dt><dd class="health-good">Rejected</dd></div>
             <div><dt>Public live feed</dt><dd id="health-public">Locked</dd></div>
@@ -185,8 +186,9 @@
       <section class="pipeline-notice section-shell reveal" aria-label="Market data notice">
         <span>Public data notice</span>
         <p id="pipeline-notice-copy">
-          This preview uses generated demonstration data. Public live-market display stays
-          disabled until the data provider's redistribution permission is confirmed.
+          This is synthetic demonstration data, not Samsung Electronics market data.
+          Public live-market display stays disabled until the collection service is deployed
+          and the data provider's redistribution permission is confirmed.
         </p>
       </section>
 

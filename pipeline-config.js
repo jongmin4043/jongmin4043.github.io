@@ -7,10 +7,11 @@ window.PIPELINE_CONFIG = Object.freeze({
   symbol: "005930",
   symbolName: "Samsung Electronics",
   market: "KRX",
+  chartIntervalMinutes: 5,
   supabaseUrl: "",
   supabaseAnonKey: "",
   refreshMs: 30000,
   demoTickMs: 4500,
-  maxCandles: 120,
+  maxCandles: 300,
   publicLiveDataApproved: false,
 });

@@ -25,7 +25,12 @@
     healthPublic: document.getElementById("health-public"),
     notice: document.getElementById("pipeline-notice-copy"),
     trades: document.getElementById("paper-trades-body"),
+    symbolOverline: document.getElementById("pipeline-symbol-overline"),
+    symbolName: document.getElementById("pipeline-symbol-name"),
   };
+
+  const intervalMinutes = Math.max(1, Math.floor(Number(config.chartIntervalMinutes) || 5));
+  const intervalMs = intervalMinutes * 60_000;
 
   const state = {
     candles: [],
@@ -68,6 +73,12 @@
     minute: "2-digit",
     hour12: false,
   });
+  const sessionDateFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
   const escapeHtml = (value) => String(value)
     .replaceAll("&", "&amp;")
@@ -82,9 +93,10 @@
     && Boolean(config.supabaseAnonKey);
 
   const visibleCandles = () => {
-    const source = state.autoFollow || !state.frozenEndTime
+    const rawSource = state.autoFollow || !state.frozenEndTime
       ? state.candles
       : state.candles.filter((candle) => candle.time <= state.frozenEndTime);
+    const source = core.aggregateCandles(rawSource, intervalMinutes);
     const width = Math.max(wrapper.clientWidth, 320);
     const capacity = Math.max(26, Math.floor((width - 94) / 9));
     return source.slice(-capacity);
@@ -223,7 +235,7 @@
       context.globalAlpha = 1;
 
       state.trades
-        .filter((trade) => Math.abs(Number(trade.time) - candle.time) < 60_000)
+        .filter((trade) => Number(trade.time) >= candle.time && Number(trade.time) < candle.time + intervalMs)
         .forEach((trade) => drawMarker(trade, candle, x, candleWidth, yForPrice, top, priceBottom));
     });
 
@@ -245,7 +257,7 @@
       context.moveTo(x + 0.5, top);
       context.lineTo(x + 0.5, height - bottom);
       context.stroke();
-      tooltip.textContent = `${dateTimeFormatter.format(new Date(hovered.time))}  O ${priceFormatter.format(hovered.open)}  H ${priceFormatter.format(hovered.high)}  L ${priceFormatter.format(hovered.low)}  C ${priceFormatter.format(hovered.close)}  V ${compactFormatter.format(hovered.volume)}`;
+      tooltip.textContent = `${intervalMinutes}m · ${dateTimeFormatter.format(new Date(hovered.time))}  O ${priceFormatter.format(hovered.open)}  H ${priceFormatter.format(hovered.high)}  L ${priceFormatter.format(hovered.low)}  C ${priceFormatter.format(hovered.close)}  V ${compactFormatter.format(hovered.volume)}`;
       tooltip.classList.add("is-visible");
     } else {
       tooltip.classList.remove("is-visible");
@@ -253,13 +265,18 @@
   }
 
   const updateMetrics = (requestDuration = null) => {
-    const candles = state.candles;
+    const candles = core.aggregateCandles(state.candles, intervalMinutes);
     if (!candles.length) return;
     const latest = candles[candles.length - 1];
-    const first = candles[0];
+    const rawLatest = state.candles[state.candles.length - 1];
+    const latestSessionDate = sessionDateFormatter.format(new Date(latest.time));
+    const sessionCandles = candles.filter(
+      (candle) => sessionDateFormatter.format(new Date(candle.time)) === latestSessionDate,
+    );
+    const first = sessionCandles[0] || candles[0];
     const change = latest.close - first.open;
     const percent = core.percentChange(first.open, latest.close);
-    const sessionVolume = candles.reduce((sum, candle) => sum + candle.volume, 0);
+    const sessionVolume = sessionCandles.reduce((sum, candle) => sum + candle.volume, 0);
     const changeClass = change >= 0 ? "is-up" : "is-down";
     const sign = change >= 0 ? "+" : "";
 
@@ -273,8 +290,8 @@
       elements.lag.textContent = "SIM";
       elements.lagLabel.textContent = "accelerated";
     } else {
-      const collectedAt = latest.collectedAt || Date.now();
-      const lagSeconds = Math.max(0, Math.round((collectedAt - latest.time) / 1000));
+      const collectedAt = rawLatest.collectedAt || Date.now();
+      const lagSeconds = Math.max(0, Math.round((collectedAt - rawLatest.time) / 1000));
       elements.lag.textContent = `${lagSeconds}s`;
       elements.lagLabel.textContent = requestDuration === null ? "collection lag" : `${requestDuration}ms API`;
     }
@@ -307,15 +324,17 @@
 
   const startDemo = () => {
     state.mode = "demo";
-    state.candles = core.generateDemoCandles({ count: 88, startPrice: 72400, seed: 4043 });
+    state.candles = core.generateDemoCandles({ count: 240, startPrice: 10000, seed: 4043 });
     state.trades = [
-      { time: state.candles[34].time, side: "BUY", price: state.candles[34].close, quantity: 10, strategy: "demo_alpha" },
-      { time: state.candles[62].time, side: "SELL", price: state.candles[62].close, quantity: 10, strategy: "demo_alpha" },
+      { time: state.candles[76].time, side: "BUY", price: state.candles[76].close, quantity: 10, strategy: "demo_alpha" },
+      { time: state.candles[176].time, side: "SELL", price: state.candles[176].close, quantity: 10, strategy: "demo_alpha" },
     ];
-    elements.mode.innerHTML = "<i></i> Demo stream";
+    elements.symbolOverline.textContent = "DEMO · NOT MARKET DATA";
+    elements.symbolName.textContent = `Synthetic ${intervalMinutes}-minute preview`;
+    elements.mode.innerHTML = `<i></i> Synthetic demo · ${intervalMinutes}m`;
     elements.healthMode.textContent = "Demo";
     elements.healthPublic.textContent = "Locked";
-    setStatus("Demo stream active", "demo");
+    setStatus(`Synthetic 1m source aggregated to ${intervalMinutes}m`, "demo");
     updateMetrics();
     renderTradesTable();
     resizeCanvas();
@@ -323,7 +342,7 @@
     window.setInterval(() => {
       const previous = state.candles[state.candles.length - 1];
       const next = core.nextDemoCandle(previous, previous.time / 60_000 + 4043);
-      state.candles = core.mergeCandles(state.candles, [next], Number(config.maxCandles) || 120);
+      state.candles = core.mergeCandles(state.candles, [next], Number(config.maxCandles) || 300);
       if (state.autoFollow) state.frozenEndTime = null;
       setStatus("Demo candle appended", "demo");
       updateMetrics();
@@ -356,7 +375,7 @@
       );
       const candleQuery = latestCandle
         ? `candles_1m?select=symbol,bar_time,open,high,low,close,volume,collected_at&symbol=eq.${encodeURIComponent(config.symbol)}&is_complete=eq.true&public_visible=eq.true&bar_time=gt.${encodeURIComponent(new Date(latestCandle.time).toISOString())}&order=bar_time.asc&limit=5`
-        : `candles_1m?select=symbol,bar_time,open,high,low,close,volume,collected_at&symbol=eq.${encodeURIComponent(config.symbol)}&is_complete=eq.true&public_visible=eq.true&order=bar_time.desc&limit=${Number(config.maxCandles) || 120}`;
+        : `candles_1m?select=symbol,bar_time,open,high,low,close,volume,collected_at&symbol=eq.${encodeURIComponent(config.symbol)}&is_complete=eq.true&public_visible=eq.true&order=bar_time.desc&limit=${Number(config.maxCandles) || 300}`;
       const tradeQuery = latestTradeTime
         ? `paper_trades?select=symbol,execution_time,side,price,quantity,strategy_version&symbol=eq.${encodeURIComponent(config.symbol)}&public_visible=eq.true&execution_time=gt.${encodeURIComponent(new Date(latestTradeTime).toISOString())}&order=execution_time.asc&limit=10`
         : `paper_trades?select=symbol,execution_time,side,price,quantity,strategy_version&symbol=eq.${encodeURIComponent(config.symbol)}&public_visible=eq.true&order=execution_time.desc&limit=40`;
@@ -365,7 +384,7 @@
         supabaseRequest(tradeQuery),
       ]);
       const incomingCandles = latestCandle ? rows : rows.reverse();
-      state.candles = core.mergeCandles(state.candles, incomingCandles, Number(config.maxCandles) || 120);
+      state.candles = core.mergeCandles(state.candles, incomingCandles, Number(config.maxCandles) || 300);
       const incomingTrades = trades.map((trade) => ({
         time: Date.parse(trade.execution_time),
         side: trade.side,
@@ -384,11 +403,13 @@
         .slice(-40);
 
       elements.mode.classList.add("is-live");
-      elements.mode.innerHTML = "<i></i> Live public feed";
+      elements.symbolOverline.textContent = `${config.market || "KRX"} · ${config.symbol}`;
+      elements.symbolName.textContent = config.symbolName || config.symbol;
+      elements.mode.innerHTML = `<i></i> Live public feed · ${intervalMinutes}m`;
       elements.healthMode.textContent = "Live";
       elements.healthPublic.textContent = "Approved";
       elements.healthPublic.className = "health-good";
-      elements.notice.textContent = "Public display is reading completed 1-minute candles from the approved public dataset. Broker credentials remain server-side.";
+      elements.notice.textContent = `Public display aggregates completed 1-minute source bars into ${intervalMinutes}-minute candles. Broker credentials remain server-side.`;
       setStatus(state.candles.length ? "Live feed connected" : "Connected · waiting for a public candle", "live");
       updateMetrics(Math.round(performance.now() - startedAt));
       renderTradesTable();
