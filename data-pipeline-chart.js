@@ -37,6 +37,10 @@
     requestStartedAt: null,
   };
 
+  let resizeFrame = null;
+  let canvasPixelWidth = 0;
+  let canvasPixelHeight = 0;
+
   const colors = {
     text: "rgba(244, 242, 239, .9)",
     muted: "rgba(148, 151, 161, .78)",
@@ -90,12 +94,25 @@
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     const width = Math.max(1, wrapper.clientWidth);
     const height = Math.max(1, wrapper.clientHeight);
-    canvas.width = Math.round(width * ratio);
-    canvas.height = Math.round(height * ratio);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    const nextPixelWidth = Math.round(width * ratio);
+    const nextPixelHeight = Math.round(height * ratio);
+
+    if (nextPixelWidth !== canvasPixelWidth || nextPixelHeight !== canvasPixelHeight) {
+      canvas.width = nextPixelWidth;
+      canvas.height = nextPixelHeight;
+      canvasPixelWidth = nextPixelWidth;
+      canvasPixelHeight = nextPixelHeight;
+    }
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     drawChart();
+  };
+
+  const scheduleCanvasResize = () => {
+    if (resizeFrame !== null) return;
+    resizeFrame = window.requestAnimationFrame(() => {
+      resizeFrame = null;
+      resizeCanvas();
+    });
   };
 
   const drawText = (text, x, y, align = "left", color = colors.muted) => {
@@ -409,10 +426,10 @@
   });
 
   if ("ResizeObserver" in window) {
-    const resizeObserver = new ResizeObserver(resizeCanvas);
+    const resizeObserver = new ResizeObserver(scheduleCanvasResize);
     resizeObserver.observe(wrapper);
   } else {
-    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("resize", scheduleCanvasResize);
   }
 
   if (isLiveConfigurationValid()) {
