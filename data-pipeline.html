@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Data Pipeline — an independent quantitative development project by Jongmin Park."
+      content="A live 1-minute market-data pipeline and paper-trading dashboard by Jongmin Park."
     />
     <meta name="theme-color" content="#080a0f" />
     <title>Data Pipeline — Jongmin Park</title>
@@ -18,8 +18,11 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
+    <script src="pipeline-config.js" defer></script>
+    <script src="pipeline-core.js" defer></script>
+    <script src="data-pipeline-chart.js" defer></script>
   </head>
-  <body>
+  <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
     <div class="cursor-glow" aria-hidden="true"></div>
 
@@ -35,50 +38,156 @@
       <a class="nav-link" href="index.html#data-pipeline">Back to work</a>
     </header>
 
-    <main id="top" class="detail-main">
-      <section class="detail-hero section-shell" aria-labelledby="detail-title">
-        <a class="detail-back reveal" href="index.html#data-pipeline">← Quant Development</a>
-        <p class="detail-eyebrow reveal"><span>01</span> Quant Development</p>
-        <h1 id="detail-title" class="reveal">Data<br /><em>Pipeline.</em></h1>
-        <p class="detail-intro reveal">
-          A dedicated page for documenting the project's purpose, market-data workflow,
-          validation rules, automation, and development progress. The detailed content
-          will be developed through upcoming discussions.
+    <main id="top" class="pipeline-main">
+      <section class="pipeline-intro section-shell" aria-labelledby="pipeline-title">
+        <div>
+          <a class="detail-back reveal" href="index.html#data-pipeline">← Quant Development</a>
+          <p class="pipeline-kicker reveal"><span>01</span> Market data infrastructure</p>
+          <h1 id="pipeline-title" class="reveal">One-minute market state,<br /><em>kept in motion.</em></h1>
+        </div>
+        <p class="pipeline-lede reveal">
+          A serverless collection pipeline for completed 1-minute candles, designed to
+          feed the same research and paper-trading logic used by the quant testing system.
         </p>
-        <div class="detail-meta reveal" aria-label="Project summary">
-          <div><span>Category</span><strong>Quant infrastructure</strong></div>
-          <div><span>Status</span><strong>Active build</strong></div>
-          <div><span>Documentation</span><strong>In preparation</strong></div>
+      </section>
+
+      <section class="pipeline-dashboard section-shell reveal" aria-label="Market dashboard">
+        <div class="pipeline-dashboard-head">
+          <div class="pipeline-symbol">
+            <div class="pipeline-symbol-mark" aria-hidden="true">SS</div>
+            <div>
+              <span class="pipeline-overline">KRX · 005930</span>
+              <h2>Samsung Electronics</h2>
+            </div>
+          </div>
+          <div class="pipeline-head-actions">
+            <span class="pipeline-mode" id="pipeline-mode"><i></i> Demo stream</span>
+            <button class="pipeline-follow is-active" id="pipeline-follow" type="button" aria-pressed="true">
+              Auto-follow
+            </button>
+          </div>
+        </div>
+
+        <div class="pipeline-metrics" aria-label="Latest market values">
+          <div class="pipeline-price metric-primary">
+            <span>Last price</span>
+            <strong id="metric-price">—</strong>
+            <small id="metric-change">Waiting for data</small>
+          </div>
+          <div>
+            <span>Session volume</span>
+            <strong id="metric-volume">—</strong>
+            <small>shares</small>
+          </div>
+          <div>
+            <span>Last candle</span>
+            <strong id="metric-time">—</strong>
+            <small>Asia/Seoul</small>
+          </div>
+          <div>
+            <span>Pipeline lag</span>
+            <strong id="metric-lag">—</strong>
+            <small id="metric-lag-label">not measured</small>
+          </div>
+        </div>
+
+        <div class="pipeline-chart-panel">
+          <div class="pipeline-chart-tools">
+            <div class="pipeline-timeframes" aria-label="Chart timeframe">
+              <button type="button" class="is-active" aria-pressed="true">1m</button>
+              <span>Completed candles</span>
+            </div>
+            <div class="pipeline-legend" aria-label="Chart legend">
+              <span><i class="legend-up"></i>Up</span>
+              <span><i class="legend-down"></i>Down</span>
+              <span><i class="legend-buy"></i>Buy</span>
+              <span><i class="legend-sell"></i>Sell</span>
+            </div>
+          </div>
+          <div class="pipeline-canvas-wrap" id="pipeline-canvas-wrap">
+            <canvas id="pipeline-chart" aria-label="One-minute candlestick chart"></canvas>
+            <div class="pipeline-tooltip" id="pipeline-tooltip" role="status" aria-live="polite"></div>
+          </div>
+          <div class="pipeline-stream-state" role="status" aria-live="polite">
+            <span><i id="stream-dot"></i><b id="stream-status">Starting demo stream</b></span>
+            <span id="stream-updated">No update yet</span>
+          </div>
         </div>
       </section>
 
-      <section class="detail-placeholder" aria-labelledby="outline-title">
-        <div class="detail-placeholder-grid section-shell">
-          <div class="detail-placeholder-copy reveal">
-            <h2 id="outline-title">Project details,<br /><span>coming next.</span></h2>
+      <section class="pipeline-lower section-shell">
+        <article class="pipeline-paper reveal" aria-labelledby="paper-title">
+          <div class="pipeline-section-head">
+            <div>
+              <span class="pipeline-overline">Execution layer</span>
+              <h2 id="paper-title">Paper trades</h2>
+            </div>
+            <span class="pipeline-armed">Signal engine pending</span>
+          </div>
+          <div class="pipeline-table-wrap">
+            <table class="pipeline-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Side</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Strategy</th>
+                </tr>
+              </thead>
+              <tbody id="paper-trades-body">
+                <tr class="pipeline-empty-row">
+                  <td colspan="5">Demo markers are shown on the chart. Live orders remain disabled.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <aside class="pipeline-health reveal" aria-labelledby="health-title">
+          <div class="pipeline-section-head">
+            <div>
+              <span class="pipeline-overline">Data quality</span>
+              <h2 id="health-title">Pipeline health</h2>
+            </div>
+          </div>
+          <dl class="pipeline-health-list">
+            <div><dt>Mode</dt><dd id="health-mode">Demo</dd></div>
+            <div><dt>Interval</dt><dd>1 minute</dd></div>
+            <div><dt>Duplicate guard</dt><dd class="health-good">Enabled</dd></div>
+            <div><dt>Incomplete bars</dt><dd class="health-good">Rejected</dd></div>
+            <div><dt>Public live feed</dt><dd id="health-public">Locked</dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="pipeline-system" aria-labelledby="system-title">
+        <div class="section-shell pipeline-system-grid">
+          <div class="pipeline-system-copy reveal">
+            <span class="pipeline-overline">System design</span>
+            <h2 id="system-title">A short-lived process.<br /><em>A continuous record.</em></h2>
             <p>
-              This structure is ready to receive the full project explanation. No
-              technical claims are being finalized before we discuss them together.
+              A scheduler wakes the collector once per minute. It validates the newest
+              completed bar, writes it idempotently, and exits. The page reads only the
+              public view; broker credentials never enter the browser.
             </p>
           </div>
-          <div class="detail-outline reveal" aria-label="Planned documentation sections">
-            <div class="detail-outline-row">
-              <span>01</span>
-              <div><h3>Project overview</h3><p>Purpose, scope, and the problem being addressed.</p></div>
-              <span>To discuss</span>
-            </div>
-            <div class="detail-outline-row">
-              <span>02</span>
-              <div><h3>System & workflow</h3><p>Data sources, collection flow, storage, and validation.</p></div>
-              <span>To discuss</span>
-            </div>
-            <div class="detail-outline-row">
-              <span>03</span>
-              <div><h3>Progress & roadmap</h3><p>What has been built, current limits, and next steps.</p></div>
-              <span>To discuss</span>
-            </div>
-          </div>
+          <ol class="pipeline-flow reveal" aria-label="Data pipeline flow">
+            <li><span>01</span><div><strong>Schedule</strong><p>Wake once per market minute.</p></div></li>
+            <li><span>02</span><div><strong>Collect</strong><p>Request the latest KRX minute bars.</p></div></li>
+            <li><span>03</span><div><strong>Validate</strong><p>Reject duplicates and incomplete candles.</p></div></li>
+            <li><span>04</span><div><strong>Store</strong><p>Preserve candles, signals, and paper trades.</p></div></li>
+            <li><span>05</span><div><strong>Display</strong><p>Append new state without rebuilding the site.</p></div></li>
+          </ol>
         </div>
+      </section>
+
+      <section class="pipeline-notice section-shell reveal" aria-label="Market data notice">
+        <span>Public data notice</span>
+        <p id="pipeline-notice-copy">
+          This preview uses generated demonstration data. Public live-market display stays
+          disabled until the data provider's redistribution permission is confirmed.
+        </p>
       </section>
 
       <a class="detail-next section-shell" href="testing-machine.html">
