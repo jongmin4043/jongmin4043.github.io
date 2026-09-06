@@ -7,17 +7,23 @@
   };
 
   const normalizeCandle = (row) => {
-    const timeValue = row.bar_time ?? row.time;
+    const timeValue = row.bar_start ?? row.bar_time ?? row.time;
     const time = typeof timeValue === "number" ? timeValue : Date.parse(timeValue);
     const candle = {
-      symbol: String(row.symbol ?? ""),
+      symbol: String(row.instrument_id ?? row.symbol ?? ""),
       time,
       open: toNumber(row.open),
       high: toNumber(row.high),
       low: toNumber(row.low),
       close: toNumber(row.close),
       volume: toNumber(row.volume) ?? 0,
-      collectedAt: row.collected_at ? Date.parse(row.collected_at) : null,
+      collectedAt: (() => {
+        const value = row.collected_at ?? row.collectedAt;
+        if (typeof value === "number") return Number.isFinite(value) ? value : null;
+        const parsed = value ? Date.parse(value) : null;
+        return Number.isFinite(parsed) ? parsed : null;
+      })(),
+      isComplete: (row.is_complete ?? row.isComplete) !== false,
     };
 
     const valid = Number.isFinite(candle.time)
@@ -65,6 +71,7 @@
       existing.close = candle.close;
       existing.volume += candle.volume;
       existing.sampleCount += 1;
+      existing.isComplete = existing.isComplete && candle.isComplete;
       const latestCollectedAt = Math.max(
         Number(existing.collectedAt) || 0,
         Number(candle.collectedAt) || 0,

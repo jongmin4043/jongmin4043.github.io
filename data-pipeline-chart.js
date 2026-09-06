@@ -10,6 +10,7 @@
   const wrapper = document.getElementById("pipeline-canvas-wrap");
   const tooltip = document.getElementById("pipeline-tooltip");
   const followButton = document.getElementById("pipeline-follow");
+  const symbolButtons = [...document.querySelectorAll("[data-instrument-id]")];
   const elements = {
     mode: document.getElementById("pipeline-mode"),
     price: document.getElementById("metric-price"),
@@ -31,6 +32,16 @@
 
   const intervalMinutes = Math.max(1, Math.floor(Number(config.chartIntervalMinutes) || 5));
   const intervalMs = intervalMinutes * 60_000;
+  const instruments = Array.isArray(config.instruments) && config.instruments.length
+    ? config.instruments
+    : [{
+      instrumentId: "KRX:005930",
+      symbol: "005930",
+      symbolName: "Samsung Electronics",
+      market: "KRX",
+      mark: "SE",
+    }];
+  const instrumentsById = new Map(instruments.map((item) => [item.instrumentId, item]));
 
   const state = {
     candles: [],
@@ -40,6 +51,9 @@
     frozenEndTime: null,
     hoverIndex: null,
     requestStartedAt: null,
+    activeInstrumentId: instruments[0].instrumentId,
+    historyLoaded: false,
+    loading: false,
   };
 
   let resizeFrame = null;
@@ -90,7 +104,23 @@
   const isLiveConfigurationValid = () => config.mode === "live"
     && config.publicLiveDataApproved === true
     && /^https:\/\//.test(config.supabaseUrl || "")
-    && Boolean(config.supabaseAnonKey);
+    && /^sb_publishable_/.test(config.supabasePublishableKey || "");
+
+  const activeInstrument = () => instrumentsById.get(state.activeInstrumentId)
+    || instruments[0];
+
+  const updateInstrumentHeading = () => {
+    const instrument = activeInstrument();
+    elements.symbolOverline.textContent = `${instrument.market} · ${instrument.symbol}`;
+    elements.symbolName.textContent = instrument.symbolName;
+    const mark = document.querySelector(".pipeline-symbol-mark");
+    if (mark) mark.textContent = instrument.mark || instrument.symbol.slice(-2);
+    symbolButtons.forEach((button) => {
+      const selected = button.dataset.instrumentId === state.activeInstrumentId;
+      button.classList.toggle("is-active", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+  };
 
   const visibleCandles = () => {
     const rawSource = state.autoFollow || !state.frozenEndTime
@@ -162,7 +192,10 @@
 
     const candles = visibleCandles();
     if (!candles.length) {
-      drawText("WAITING FOR THE FIRST COMPLETED CANDLE", width / 2, height / 2, "center");
+      const emptyMessage = state.mode === "locked"
+        ? "LIVE MARKET FEED LOCKED"
+        : "WAITING FOR THE FIRST MARKET CANDLE";
+      drawText(emptyMessage, width / 2, height / 2, "center");
       return;
     }
 
@@ -227,7 +260,13 @@
       context.lineTo(x + 0.5, lowY);
       context.stroke();
       context.fillStyle = color;
+      context.globalAlpha = candle.isComplete ? 1 : 0.68;
       context.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+      if (!candle.isComplete) {
+        context.globalAlpha = 1;
+        context.strokeStyle = color;
+        context.strokeRect(x - bodyWidth / 2 - 1, bodyTop - 1, bodyWidth + 2, bodyHeight + 2);
+      }
 
       const barHeight = (candle.volume / maxVolume) * volumeHeight;
       context.globalAlpha = 0.34;
@@ -257,7 +296,8 @@
       context.moveTo(x + 0.5, top);
       context.lineTo(x + 0.5, height - bottom);
       context.stroke();
-      tooltip.textContent = `${intervalMinutes}m · ${dateTimeFormatter.format(new Date(hovered.time))}  O ${priceFormatter.format(hovered.open)}  H ${priceFormatter.format(hovered.high)}  L ${priceFormatter.format(hovered.low)}  C ${priceFormatter.format(hovered.close)}  V ${compactFormatter.format(hovered.volume)}`;
+      const candleState = hovered.isComplete ? "CLOSED" : "FORMING";
+      tooltip.textContent = `${intervalMinutes}m ${candleState} · ${dateTimeFormatter.format(new Date(hovered.time))}  O ${priceFormatter.format(hovered.open)}  H ${priceFormatter.format(hovered.high)}  L ${priceFormatter.format(hovered.low)}  C ${priceFormatter.format(hovered.close)}  V ${compactFormatter.format(hovered.volume)}`;
       tooltip.classList.add("is-visible");
     } else {
       tooltip.classList.remove("is-visible");
@@ -291,9 +331,9 @@
       elements.lagLabel.textContent = "accelerated";
     } else {
       const collectedAt = rawLatest.collectedAt || Date.now();
-      const lagSeconds = Math.max(0, Math.round((collectedAt - rawLatest.time) / 1000));
+      const lagSeconds = Math.max(0, Math.round((Date.now() - collectedAt) / 1000));
       elements.lag.textContent = `${lagSeconds}s`;
-      elements.lagLabel.textContent = requestDuration === null ? "collection lag" : `${requestDuration}ms API`;
+      elements.lagLabel.textContent = requestDuration === null ? "data age" : `${requestDuration}ms API`;
     }
   };
 
@@ -350,67 +390,90 @@
     }, Math.max(2000, Number(config.demoTickMs) || 4500));
   };
 
-  const supabaseRequest = async (path) => {
-    const response = await fetch(`${config.supabaseUrl}/rest/v1/${path}`, {
+  const supabaseRpc = async (functionName, payload) => {
+    const response = await fetch(`${config.supabaseUrl}/rest/v1/rpc/${functionName}`, {
+      method: "POST",
       headers: {
-        apikey: config.supabaseAnonKey,
-        Authorization: `Bearer ${config.supabaseAnonKey}`,
+        apikey: config.supabasePublishableKey,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify(payload),
       cache: "no-store",
     });
     if (!response.ok) throw new Error(`Public data API returned ${response.status}`);
     return response.json();
   };
 
-  const loadLiveData = async () => {
-    const startedAt = performance.now();
-    setStatus("Checking for a completed candle", "live");
-    try {
-      const latestCandle = state.candles.length
-        ? state.candles[state.candles.length - 1]
-        : null;
-      const latestTradeTime = state.trades.reduce(
-        (latest, trade) => Math.max(latest, Number(trade.time) || 0),
-        0,
-      );
-      const candleQuery = latestCandle
-        ? `candles_1m?select=symbol,bar_time,open,high,low,close,volume,collected_at&symbol=eq.${encodeURIComponent(config.symbol)}&is_complete=eq.true&public_visible=eq.true&bar_time=gt.${encodeURIComponent(new Date(latestCandle.time).toISOString())}&order=bar_time.asc&limit=5`
-        : `candles_1m?select=symbol,bar_time,open,high,low,close,volume,collected_at&symbol=eq.${encodeURIComponent(config.symbol)}&is_complete=eq.true&public_visible=eq.true&order=bar_time.desc&limit=${Number(config.maxCandles) || 300}`;
-      const tradeQuery = latestTradeTime
-        ? `paper_trades?select=symbol,execution_time,side,price,quantity,strategy_version&symbol=eq.${encodeURIComponent(config.symbol)}&public_visible=eq.true&execution_time=gt.${encodeURIComponent(new Date(latestTradeTime).toISOString())}&order=execution_time.asc&limit=10`
-        : `paper_trades?select=symbol,execution_time,side,price,quantity,strategy_version&symbol=eq.${encodeURIComponent(config.symbol)}&public_visible=eq.true&order=execution_time.desc&limit=40`;
-      const [rows, trades] = await Promise.all([
-        supabaseRequest(candleQuery),
-        supabaseRequest(tradeQuery),
-      ]);
-      const incomingCandles = latestCandle ? rows : rows.reverse();
-      state.candles = core.mergeCandles(state.candles, incomingCandles, Number(config.maxCandles) || 300);
-      const incomingTrades = trades.map((trade) => ({
-        time: Date.parse(trade.execution_time),
-        side: trade.side,
-        price: Number(trade.price),
-        quantity: Number(trade.quantity),
-        strategy: trade.strategy_version,
-      })).filter((trade) => Number.isFinite(trade.time));
-      const tradesByKey = new Map(
-        [...state.trades, ...incomingTrades].map((trade) => [
-          `${trade.time}:${trade.side}:${trade.price}:${trade.strategy}`,
-          trade,
-        ]),
-      );
-      state.trades = [...tradesByKey.values()]
-        .sort((left, right) => left.time - right.time)
-        .slice(-40);
+  const startLocked = () => {
+    state.mode = "locked";
+    state.candles = [];
+    state.trades = [];
+    updateInstrumentHeading();
+    elements.mode.classList.remove("is-live");
+    elements.mode.innerHTML = "<i></i> Public feed locked";
+    elements.healthMode.textContent = "Ready";
+    elements.healthPublic.textContent = "Locked";
+    elements.healthPublic.className = "";
+    elements.notice.textContent = "The live chart path is installed but remains locked until the first collection run is validated and redistribution permission is documented.";
+    elements.lag.textContent = "—";
+    elements.lagLabel.textContent = "not released";
+    setStatus("Live chart awaiting release approval", "locked");
+    renderTradesTable();
+    resizeCanvas();
+  };
 
+  const loadLiveData = async ({ reset = false } = {}) => {
+    if (state.loading) return;
+    state.loading = true;
+    if (reset) {
+      state.candles = [];
+      state.trades = [];
+      state.historyLoaded = false;
+      state.frozenEndTime = null;
+      state.hoverIndex = null;
+      drawChart();
+    }
+    const startedAt = performance.now();
+    setStatus("Refreshing market state", "live");
+    try {
+      if (!state.historyLoaded) {
+        const history = await supabaseRpc("get_public_chart_history", {
+          p_instrument_id: state.activeInstrumentId,
+          p_limit: Number(config.maxCandles) || 300,
+        });
+        state.candles = core.mergeCandles([], history, Number(config.maxCandles) || 300);
+        state.historyLoaded = true;
+      }
+
+      const tail = await supabaseRpc("get_public_chart_tail", {
+        p_instrument_id: state.activeInstrumentId,
+      });
+      state.candles = core.mergeCandles(
+        state.candles,
+        tail,
+        Number(config.maxCandles) || 300,
+      );
+
+      const instrument = activeInstrument();
       elements.mode.classList.add("is-live");
-      elements.symbolOverline.textContent = `${config.market || "KRX"} · ${config.symbol}`;
-      elements.symbolName.textContent = config.symbolName || config.symbol;
-      elements.mode.innerHTML = `<i></i> Live public feed · ${intervalMinutes}m`;
+      updateInstrumentHeading();
+      elements.mode.innerHTML = `<i></i> Live-forming ${intervalMinutes}m · ${Math.round((Number(config.refreshMs) || 10000) / 1000)}s`;
       elements.healthMode.textContent = "Live";
       elements.healthPublic.textContent = "Approved";
       elements.healthPublic.className = "health-good";
-      elements.notice.textContent = `Public display aggregates completed 1-minute source bars into ${intervalMinutes}-minute candles. Broker credentials remain server-side.`;
-      setStatus(state.candles.length ? "Live feed connected" : "Connected · waiting for a public candle", "live");
+      elements.notice.textContent = `${instrument.symbolName} displays approved chart-only fields. Order flow, order book, features, and credentials remain private.`;
+
+      const latest = state.candles[state.candles.length - 1];
+      const dataAge = latest && latest.collectedAt
+        ? Date.now() - latest.collectedAt
+        : Number.POSITIVE_INFINITY;
+      const fresh = dataAge <= Math.max(30000, Number(config.staleAfterMs) || 120000);
+      const status = !state.candles.length
+        ? "Connected · waiting for the first candle"
+        : fresh
+          ? "Live market feed"
+          : "Market closed · showing latest stored candle";
+      setStatus(status, fresh ? "live" : "stale");
       updateMetrics(Math.round(performance.now() - startedAt));
       renderTradesTable();
       drawChart();
@@ -418,8 +481,21 @@
       elements.status.textContent = "Live feed unavailable";
       elements.updated.textContent = error.message;
       elements.dot.classList.remove("is-live");
+    } finally {
+      state.loading = false;
     }
   };
+
+  symbolButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const instrumentId = button.dataset.instrumentId;
+      if (!instrumentsById.has(instrumentId) || instrumentId === state.activeInstrumentId) return;
+      state.activeInstrumentId = instrumentId;
+      updateInstrumentHeading();
+      if (isLiveConfigurationValid()) loadLiveData({ reset: true });
+      else startLocked();
+    });
+  });
 
   followButton.addEventListener("click", () => {
     state.autoFollow = !state.autoFollow;
@@ -455,8 +531,14 @@
 
   if (isLiveConfigurationValid()) {
     state.mode = "live";
+    updateInstrumentHeading();
     loadLiveData();
-    window.setInterval(loadLiveData, Math.max(15000, Number(config.refreshMs) || 30000));
+    window.setInterval(
+      loadLiveData,
+      Math.max(5000, Number(config.refreshMs) || 10000),
+    );
+  } else if (config.mode === "live") {
+    startLocked();
   } else {
     startDemo();
   }

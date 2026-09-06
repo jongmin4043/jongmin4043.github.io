@@ -18,9 +18,9 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
-    <script src="pipeline-config.js?v=5m-1" defer></script>
-    <script src="pipeline-core.js?v=5m-1" defer></script>
-    <script src="data-pipeline-chart.js?v=5m-1" defer></script>
+    <script src="pipeline-config.js?v=live-3" defer></script>
+    <script src="pipeline-core.js?v=live-3" defer></script>
+    <script src="data-pipeline-chart.js?v=live-3" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
@@ -46,8 +46,8 @@
           <h1 id="pipeline-title" class="reveal">Five-minute market state,<br /><em>kept in motion.</em></h1>
         </div>
         <p class="pipeline-lede reveal">
-          A serverless collection pipeline for completed 1-minute candles, designed to
-          feed the same research and paper-trading logic used by the quant testing system.
+          KRX executions stream into a five-minute research record while the current
+          candle is refreshed separately for a low-latency operational view.
         </p>
       </section>
 
@@ -61,6 +61,10 @@
             </div>
           </div>
           <div class="pipeline-head-actions">
+            <div class="pipeline-symbol-tabs" aria-label="Select instrument">
+              <button class="is-active" type="button" data-instrument-id="KRX:005930" aria-pressed="true">Samsung</button>
+              <button type="button" data-instrument-id="KRX:000660" aria-pressed="false">SK hynix</button>
+            </div>
             <span class="pipeline-mode" id="pipeline-mode"><i></i> Demo stream</span>
             <button class="pipeline-follow is-active" id="pipeline-follow" type="button" aria-pressed="true">
               Auto-follow
@@ -95,7 +99,7 @@
           <div class="pipeline-chart-tools">
             <div class="pipeline-timeframes" aria-label="Chart timeframe">
               <button type="button" class="is-active" aria-pressed="true">5m</button>
-              <span>Aggregated from completed 1m bars</span>
+              <span>Completed bars + live-forming candle</span>
             </div>
             <div class="pipeline-legend" aria-label="Chart legend">
               <span><i class="legend-up"></i>Up</span>
@@ -154,7 +158,7 @@
           <dl class="pipeline-health-list">
             <div><dt>Mode</dt><dd id="health-mode">Demo</dd></div>
             <div><dt>Chart interval</dt><dd>5 minutes</dd></div>
-            <div><dt>Source interval</dt><dd>1 minute</dd></div>
+            <div><dt>Source</dt><dd>KIS WebSocket</dd></div>
             <div><dt>Duplicate guard</dt><dd class="health-good">Enabled</dd></div>
             <div><dt>Incomplete bars</dt><dd class="health-good">Rejected</dd></div>
             <div><dt>Public live feed</dt><dd id="health-public">Locked</dd></div>
@@ -168,17 +172,17 @@
             <span class="pipeline-overline">System design</span>
             <h2 id="system-title">A short-lived process.<br /><em>A continuous record.</em></h2>
             <p>
-              A scheduler wakes the collector once per minute. It validates the newest
-              completed bar, writes it idempotently, and exits. The page reads only the
-              public view; broker credentials never enter the browser.
+              One scheduled job holds the KRX stream through the session. Completed bars
+              enter the research store; a throttled current-candle snapshot powers the
+              chart. The browser can access only deliberately released chart fields.
             </p>
           </div>
           <ol class="pipeline-flow reveal" aria-label="Data pipeline flow">
-            <li><span>01</span><div><strong>Schedule</strong><p>Wake once per market minute.</p></div></li>
-            <li><span>02</span><div><strong>Collect</strong><p>Request the latest KRX minute bars.</p></div></li>
-            <li><span>03</span><div><strong>Validate</strong><p>Reject duplicates and incomplete candles.</p></div></li>
-            <li><span>04</span><div><strong>Store</strong><p>Preserve candles, signals, and paper trades.</p></div></li>
-            <li><span>05</span><div><strong>Display</strong><p>Append new state without rebuilding the site.</p></div></li>
+            <li><span>01</span><div><strong>Schedule</strong><p>Start before the KRX session.</p></div></li>
+            <li><span>02</span><div><strong>Stream</strong><p>Receive executions and order-book changes.</p></div></li>
+            <li><span>03</span><div><strong>Aggregate</strong><p>Build exchange-aligned five-minute state.</p></div></li>
+            <li><span>04</span><div><strong>Store</strong><p>Keep completed bars and private research data.</p></div></li>
+            <li><span>05</span><div><strong>Display</strong><p>Refresh the forming candle every ten seconds.</p></div></li>
           </ol>
         </div>
       </section>
@@ -186,9 +190,8 @@
       <section class="pipeline-notice section-shell reveal" aria-label="Market data notice">
         <span>Public data notice</span>
         <p id="pipeline-notice-copy">
-          This is synthetic demonstration data, not Samsung Electronics market data.
-          Public live-market display stays disabled until the collection service is deployed
-          and the data provider's redistribution permission is confirmed.
+          Public live-market display remains locked until the provider's redistribution
+          permission is documented and the first live collection run passes validation.
         </p>
       </section>
 
