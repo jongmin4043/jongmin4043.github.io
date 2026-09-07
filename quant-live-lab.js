@@ -192,6 +192,10 @@
   };
 
   const drawEquity = () => {
+    const styles = window.getComputedStyle(document.documentElement);
+    const chartGrid = styles.getPropertyValue("--chart-grid").trim() || "rgba(255,255,255,.07)";
+    const chartMuted = styles.getPropertyValue("--chart-muted").trim() || "rgba(148,151,161,.78)";
+    const chartUp = styles.getPropertyValue("--chart-up").trim() || "#42e8bd";
     const ratioValue = Math.min(window.devicePixelRatio || 1, 2);
     const width = Math.max(1, wrapper.clientWidth);
     const height = Math.max(1, wrapper.clientHeight);
@@ -226,12 +230,12 @@
     for (let index = 0; index <= 4; index += 1) {
       const value = maxValue - ((maxValue - minValue) / 4) * index;
       const yPos = top + (plotHeight / 4) * index;
-      context.strokeStyle = "rgba(255,255,255,.07)";
+      context.strokeStyle = chartGrid;
       context.beginPath();
       context.moveTo(left, yPos + 0.5);
       context.lineTo(width - right, yPos + 0.5);
       context.stroke();
-      context.fillStyle = "rgba(148,151,161,.78)";
+      context.fillStyle = chartMuted;
       context.textAlign = "left";
       context.fillText(`${(value * 100).toFixed(1)}%`, width - right + 9, yPos);
     }
@@ -250,8 +254,8 @@
       });
       if (started) context.stroke();
     };
-    line("benchmark_return", "rgba(148,151,161,.75)");
-    line("cumulative_return", "#42e8bd");
+    line("benchmark_return", chartMuted);
+    line("cumulative_return", chartUp);
   };
 
   const populateRuns = () => {
@@ -328,6 +332,7 @@
   };
 
   select.addEventListener("change", () => loadRun(select.value));
+  window.addEventListener("site-theme-change", drawEquity);
   if ("ResizeObserver" in window) new ResizeObserver(drawEquity).observe(wrapper);
   else window.addEventListener("resize", drawEquity);
   initialize();

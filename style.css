@@ -10,6 +10,13 @@
   --line-strong: rgba(255, 255, 255, 0.18);
   --violet: #876cff;
   --mint: #42e8bd;
+  --accent: #42e8bd;
+  --paper: #f4f2ef;
+  --chart-muted: rgba(148, 151, 161, 0.78);
+  --chart-grid: rgba(255, 255, 255, 0.065);
+  --chart-up: #42e8bd;
+  --chart-down: #ff7187;
+  --chart-crosshair: rgba(255, 255, 255, 0.24);
   --mono: "DM Mono", "SFMono-Regular", Consolas, monospace;
   --sans: "Manrope", Inter, system-ui, sans-serif;
   --max-width: 1240px;
@@ -2350,4 +2357,156 @@ svg {
   .quant-metric-grid article:nth-last-child(-n + 2) { border-right: 0; border-bottom: 1px solid var(--line); }
   .quant-metric-grid article:last-child { border-bottom: 0; }
   .quant-panel-head { align-items: flex-start; flex-direction: column; }
+}
+
+/* Persistent site theme control */
+.theme-control {
+  display: flex;
+  justify-content: flex-end;
+  padding-block: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.theme-control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.theme-control input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--violet);
+  cursor: pointer;
+}
+
+.theme-control span,
+.theme-control strong,
+.theme-control small {
+  display: block;
+}
+
+.theme-control strong {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.theme-control small {
+  margin-top: 3px;
+  color: var(--subtle);
+  font-size: 0.64rem;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ink: #161a22;
+  --muted: #586171;
+  --subtle: #7a8494;
+  --page: #f5f7fb;
+  --panel: #ffffff;
+  --panel-2: #edf1f7;
+  --line: rgba(20, 28, 42, 0.11);
+  --line-strong: rgba(20, 28, 42, 0.2);
+  --violet: #6549dc;
+  --mint: #008f6c;
+  --accent: #32d5aa;
+  --paper: #161a22;
+  --chart-muted: rgba(77, 87, 104, 0.8);
+  --chart-grid: rgba(20, 28, 42, 0.09);
+  --chart-up: #008f6c;
+  --chart-down: #dc3f58;
+  --chart-crosshair: rgba(20, 28, 42, 0.3);
+}
+
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 80% 15%, rgba(101, 73, 220, 0.08), transparent 28rem),
+    var(--page);
+}
+
+:root[data-theme="light"] body::before {
+  background-image:
+    linear-gradient(rgba(20, 28, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 28, 42, 0.035) 1px, transparent 1px);
+}
+
+:root[data-theme="light"] .page-noise { opacity: 0.012; }
+:root[data-theme="light"] .cursor-glow { background: rgba(101, 73, 220, 0.08); }
+:root[data-theme="light"] .button-primary { color: #ffffff; }
+:root[data-theme="light"] .button-quiet:hover { border-color: rgba(20, 28, 42, 0.38); }
+:root[data-theme="light"] .orbit { border-color: rgba(20, 28, 42, 0.08); }
+:root[data-theme="light"] .signal-card {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 32px 80px rgba(28, 37, 54, 0.13);
+}
+:root[data-theme="light"] .chart-grid { stroke: rgba(20, 28, 42, 0.09); }
+:root[data-theme="light"] .about-body > p:first-child { color: var(--ink); }
+:root[data-theme="light"] .work,
+:root[data-theme="light"] .detail-placeholder,
+:root[data-theme="light"] .pipeline-system,
+:root[data-theme="light"] .quant-lab-dashboard { background: #edf1f7; }
+:root[data-theme="light"] .project:hover,
+:root[data-theme="light"] .quant-module,
+:root[data-theme="light"] .quant-status-strip { background: rgba(20, 28, 42, 0.025); }
+:root[data-theme="light"] .quant-module:hover { background: rgba(101, 73, 220, 0.07); }
+:root[data-theme="light"] .quant-module-tags span:not(:last-child)::after { color: rgba(20, 28, 42, 0.2); }
+:root[data-theme="light"] .quant-module-open { color: var(--muted); }
+:root[data-theme="light"] .project-mark svg { stroke: rgba(20, 28, 42, 0.14); }
+:root[data-theme="light"] .project-soon { color: rgba(20, 28, 42, 0.08); }
+:root[data-theme="light"] .contact .button-light { background: #ffffff; color: #171126; }
+:root[data-theme="light"] .pipeline-page {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(0, 143, 108, 0.06), transparent 25rem),
+    radial-gradient(circle at 84% 18%, rgba(101, 73, 220, 0.07), transparent 32rem),
+    var(--page);
+}
+:root[data-theme="light"] .pipeline-dashboard,
+:root[data-theme="light"] .pipeline-paper,
+:root[data-theme="light"] .pipeline-health,
+:root[data-theme="light"] .quant-metric-grid,
+:root[data-theme="light"] .quant-panel {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 70px rgba(28, 37, 54, 0.09);
+}
+:root[data-theme="light"] .pipeline-symbol-tabs,
+:root[data-theme="light"] .pipeline-mode,
+:root[data-theme="light"] .pipeline-follow,
+:root[data-theme="light"] .pipeline-armed,
+:root[data-theme="light"] .pipeline-timeframes button {
+  background: rgba(20, 28, 42, 0.03);
+}
+:root[data-theme="light"] .pipeline-symbol-tabs button.is-active {
+  background: var(--accent);
+  color: #08110e;
+}
+:root[data-theme="light"] .pipeline-timeframes button.is-active {
+  background: rgba(101, 73, 220, 0.1);
+}
+:root[data-theme="light"] .pipeline-canvas-wrap {
+  background:
+    linear-gradient(rgba(20, 28, 42, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 28, 42, 0.025) 1px, transparent 1px),
+    #ffffff;
+}
+:root[data-theme="light"] .pipeline-tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 32px rgba(28, 37, 54, 0.12);
+}
+:root[data-theme="light"] .quant-lab-page {
+  background:
+    radial-gradient(circle at 16% 12%, rgba(101, 73, 220, 0.07), transparent 28rem),
+    radial-gradient(circle at 86% 28%, rgba(0, 143, 108, 0.055), transparent 30rem),
+    var(--page);
+}
+:root[data-theme="light"] .quant-run-picker select { background: #ffffff; }
+
+@media (max-width: 720px) {
+  .theme-control { justify-content: flex-start; }
 }

@@ -35,7 +35,7 @@
     return valid ? candle : null;
   };
 
-  const mergeCandles = (existing, incoming, maxCandles = 120) => {
+  const mergeCandles = (existing, incoming, maxCandles = 5000) => {
     const byTime = new Map();
     [...existing, ...incoming]
       .map(normalizeCandle)
@@ -45,6 +45,33 @@
     return [...byTime.values()]
       .sort((left, right) => left.time - right.time)
       .slice(-Math.max(1, maxCandles));
+  };
+
+  const candleWindow = (candles, capacity, offsetFromLatest = 0) => {
+    const safeCapacity = Math.max(1, Math.floor(Number(capacity) || 1));
+    const maxOffset = Math.max(0, candles.length - 1);
+    const safeOffset = Math.min(
+      maxOffset,
+      Math.max(0, Math.floor(Number(offsetFromLatest) || 0)),
+    );
+    const endIndex = Math.max(0, candles.length - safeOffset);
+    const startIndex = Math.max(0, endIndex - safeCapacity);
+    return {
+      candles: candles.slice(startIndex, endIndex),
+      startIndex,
+      endIndex,
+      offsetFromLatest: safeOffset,
+      maxOffset,
+    };
+  };
+
+  const panOffset = ({ startOffset = 0, deltaPixels = 0, candlePixelWidth = 1, maxOffset = 0 } = {}) => {
+    const width = Math.max(1, Number(candlePixelWidth) || 1);
+    const deltaBars = Math.round((Number(deltaPixels) || 0) / width);
+    return Math.min(
+      Math.max(0, Math.floor(Number(maxOffset) || 0)),
+      Math.max(0, Math.floor(Number(startOffset) || 0) + deltaBars),
+    );
   };
 
   const aggregateCandles = (candles, intervalMinutes = 5) => {
@@ -136,10 +163,12 @@
 
   const api = {
     aggregateCandles,
+    candleWindow,
     generateDemoCandles,
     mergeCandles,
     nextDemoCandle,
     normalizeCandle,
+    panOffset,
     percentChange,
   };
 
