@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
     <script src="pipeline-config.js?v=public-6" defer></script>
-    <script src="data-pipeline-chart.js?v=public-6" defer></script>
+    <script src="data-pipeline-chart.js?v=public-6-2" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
@@ -43,7 +43,7 @@
         </p>
       </section>
 
-      <section class="pipeline-dashboard section-shell reveal" aria-label="Public market dashboard">
+      <section id="market-dashboard" class="pipeline-dashboard section-shell reveal" aria-label="Public market dashboard">
         <div class="pipeline-dashboard-head">
           <div class="pipeline-symbol">
             <div class="pipeline-symbol-mark" id="pipeline-symbol-mark" aria-hidden="true">SE</div>
@@ -53,12 +53,12 @@
             </div>
           </div>
           <div class="pipeline-head-actions">
-            <div class="pipeline-symbol-tabs" aria-label="Select instrument">
-              <button class="is-active" type="button" data-instrument-id="KRX:005930" aria-pressed="true">Samsung</button>
-              <button type="button" data-instrument-id="KRX:000660" aria-pressed="false">SK hynix</button>
-              <button type="button" data-instrument-id="NASDAQ:QQQ" aria-pressed="false">QQQ</button>
-              <button type="button" data-instrument-id="NYSEARCA:VOO" aria-pressed="false">VOO</button>
-            </div>
+            <form class="pipeline-symbol-tabs" action="data-pipeline.html#market-dashboard" method="get" aria-label="Select instrument">
+              <button class="is-active" type="submit" name="instrument" value="KRX:005930" data-instrument-id="KRX:005930" aria-pressed="true">SEC</button>
+              <button type="submit" name="instrument" value="KRX:000660" data-instrument-id="KRX:000660" aria-pressed="false">SK hynix</button>
+              <button type="submit" name="instrument" value="NASDAQ:QQQ" data-instrument-id="NASDAQ:QQQ" aria-pressed="false">QQQ</button>
+              <button type="submit" name="instrument" value="NYSEARCA:VOO" data-instrument-id="NYSEARCA:VOO" aria-pressed="false">VOO</button>
+            </form>
             <span class="pipeline-mode is-live" id="pipeline-mode"><i></i> Public access</span>
           </div>
         </div>
@@ -72,11 +72,8 @@
 
         <div class="pipeline-chart-panel">
           <div class="pipeline-chart-tools">
-            <div class="pipeline-timeframes" aria-label="Chart timeframe">
-              <button type="button" class="is-active" data-timeframe="5m" aria-pressed="true">5m</button>
-              <button type="button" data-timeframe="120m" aria-pressed="false">120m</button>
-              <button type="button" data-timeframe="1d" aria-pressed="false">1D</button>
-              <span>Left-drag or touch-drag to explore history</span>
+            <div class="pipeline-timeframes" aria-label="Chart guidance">
+              <span>Use chart controls to change interval · drag to explore history</span>
             </div>
             <div class="pipeline-legend" aria-label="Market data source"><span>Interactive chart · TradingView data</span></div>
           </div>

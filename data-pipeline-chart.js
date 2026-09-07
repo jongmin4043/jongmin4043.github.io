@@ -6,7 +6,6 @@
   if (!host) return;
 
   const symbolButtons = [...document.querySelectorAll("[data-instrument-id]")];
-  const timeframeButtons = [...document.querySelectorAll("[data-timeframe]")];
   const elements = {
     name: document.getElementById("pipeline-symbol-name"),
     overline: document.getElementById("pipeline-symbol-overline"),
@@ -22,7 +21,6 @@
     "NASDAQ:QQQ": "NASDAQ:QQQ",
     "NYSEARCA:VOO": "AMEX:VOO",
   });
-  const timeframeIntervals = Object.freeze({ "5m": "5", "120m": "120", "1d": "D" });
   const fallbackInstruments = [
     { instrumentId: "KRX:005930", symbol: "005930", symbolName: "Samsung Electronics", market: "KRX", mark: "SE", timeZone: "Asia/Seoul" },
     { instrumentId: "KRX:000660", symbol: "000660", symbolName: "SK hynix", market: "KRX", mark: "SH", timeZone: "Asia/Seoul" },
@@ -37,9 +35,13 @@
     tvSymbol: providerSymbols[instrument.instrumentId] || instrument.instrumentId,
   }));
   const instrumentsById = new Map(instruments.map((instrument) => [instrument.instrumentId, instrument]));
+  const requestedInstrumentId = new URLSearchParams(window.location.search).get("instrument");
   const state = {
-    instrumentId: instrumentsById.has("KRX:005930") ? "KRX:005930" : instruments[0].instrumentId,
-    timeframe: "5m",
+    instrumentId: instrumentsById.has(requestedInstrumentId)
+      ? requestedInstrumentId
+      : instrumentsById.has("KRX:005930")
+        ? "KRX:005930"
+        : instruments[0].instrumentId,
   };
 
   const activeInstrument = () => instrumentsById.get(state.instrumentId) || instruments[0];
@@ -53,11 +55,6 @@
     elements.timezone.textContent = instrument.timeZone;
     symbolButtons.forEach((button) => {
       const selected = button.dataset.instrumentId === state.instrumentId;
-      button.classList.toggle("is-active", selected);
-      button.setAttribute("aria-pressed", String(selected));
-    });
-    timeframeButtons.forEach((button) => {
-      const selected = button.dataset.timeframe === state.timeframe;
       button.classList.toggle("is-active", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
@@ -88,10 +85,10 @@
     script.type = "text/javascript";
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
-    script.textContent = JSON.stringify({
+    script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: instrument.tvSymbol,
-      interval: timeframeIntervals[state.timeframe],
+      interval: "5",
       timezone: "exchange",
       theme: "dark",
       backgroundColor: "rgba(10, 13, 19, 1)",
@@ -121,25 +118,6 @@
     elements.status.textContent = `Loading ${instrument.symbol} chart`;
     elements.updated.textContent = "No sign-in required";
   };
-
-  symbolButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const instrumentId = button.dataset.instrumentId;
-      if (!instrumentsById.has(instrumentId) || instrumentId === state.instrumentId) return;
-      state.instrumentId = instrumentId;
-      updateControls();
-      renderWidget();
-    });
-  });
-  timeframeButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const timeframe = button.dataset.timeframe;
-      if (!timeframeIntervals[timeframe] || timeframe === state.timeframe) return;
-      state.timeframe = timeframe;
-      updateControls();
-      renderWidget();
-    });
-  });
 
   updateControls();
   renderWidget();
