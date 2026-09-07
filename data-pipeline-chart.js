@@ -54,9 +54,7 @@
     "120m": { label: "120m", minutes: 120, health: "120 minutes" },
     "1d": { label: "1D", minutes: 1440, health: "1 trading day" },
   });
-  const instruments = Array.isArray(config.instruments) && config.instruments.length
-    ? config.instruments
-    : [{
+  const defaultInstruments = [{
       instrumentId: "KRX:005930",
       symbol: "005930",
       symbolName: "Samsung Electronics",
@@ -65,7 +63,43 @@
       currency: "KRW",
       timeZone: "Asia/Seoul",
       priceDecimals: 0,
+    }, {
+      instrumentId: "KRX:000660",
+      symbol: "000660",
+      symbolName: "SK hynix",
+      market: "KRX",
+      mark: "SH",
+      currency: "KRW",
+      timeZone: "Asia/Seoul",
+      priceDecimals: 0,
+    }, {
+      instrumentId: "NASDAQ:QQQ",
+      symbol: "QQQ",
+      symbolName: "Invesco QQQ Trust",
+      market: "NASDAQ",
+      mark: "QQ",
+      currency: "USD",
+      timeZone: "America/New_York",
+      priceDecimals: 2,
+    }, {
+      instrumentId: "NYSEARCA:VOO",
+      symbol: "VOO",
+      symbolName: "Vanguard S&P 500 ETF",
+      market: "NYSE Arca",
+      mark: "VO",
+      currency: "USD",
+      timeZone: "America/New_York",
+      priceDecimals: 2,
     }];
+  const configuredInstruments = Array.isArray(config.instruments)
+    ? config.instruments.filter((item) => item && typeof item.instrumentId === "string")
+    : [];
+  const configuredById = new Map(configuredInstruments.map((item) => [item.instrumentId, item]));
+  const defaultIds = new Set(defaultInstruments.map((item) => item.instrumentId));
+  const instruments = [
+    ...defaultInstruments.map((item) => ({ ...item, ...(configuredById.get(item.instrumentId) || {}) })),
+    ...configuredInstruments.filter((item) => !defaultIds.has(item.instrumentId)),
+  ];
   const instrumentsById = new Map(instruments.map((item) => [item.instrumentId, item]));
   const requestedDefault = String(config.defaultTimeframe || "5m");
   const query = new URLSearchParams(window.location.search);
@@ -87,6 +121,7 @@
     historyLoaded: false,
     hasOlder: true,
     loading: false,
+    loadGeneration: 0,
     loadingOlder: false,
     drag: null,
     accessMode: "none",
@@ -640,7 +675,8 @@
   };
 
   const loadLiveData = async ({ reset = false } = {}) => {
-    if (state.loading) return;
+    if (state.loading && !reset) return;
+    const loadGeneration = ++state.loadGeneration;
     state.loading = true;
     if (reset) {
       state.candles = [];
@@ -653,6 +689,9 @@
     }
     const requestInstrument = state.activeInstrumentId;
     const requestTimeframe = state.activeTimeframe;
+    const requestIsCurrent = () => loadGeneration === state.loadGeneration
+      && requestInstrument === state.activeInstrumentId
+      && requestTimeframe === state.activeTimeframe;
     const startedAt = performance.now();
     setStatus("Refreshing market history", "live");
     try {
@@ -663,7 +702,7 @@
           p_before: null,
           p_limit: pageSize(),
         });
-        if (requestInstrument !== state.activeInstrumentId || requestTimeframe !== state.activeTimeframe) return;
+        if (!requestIsCurrent()) return;
         state.candles = core.mergeCandles([], history, maxHistory());
         state.historyLoaded = true;
         state.hasOlder = history.length >= pageSize();
@@ -672,7 +711,7 @@
         p_instrument_id: requestInstrument,
         p_timeframe: requestTimeframe,
       });
-      if (requestInstrument !== state.activeInstrumentId || requestTimeframe !== state.activeTimeframe) return;
+      if (!requestIsCurrent()) return;
       mergeTailPreservingView(tail);
 
       const instrument = activeInstrument();
@@ -704,11 +743,12 @@
       updateSelectionUi();
       drawChart();
     } catch (error) {
+      if (!requestIsCurrent()) return;
       elements.status.textContent = "Market history unavailable";
-      elements.updated.textContent = error.message;
+      elements.updated.textContent = `${activeInstrument().symbol}: ${error.message}`;
       elements.dot.classList.remove("is-live");
     } finally {
-      state.loading = false;
+      if (loadGeneration === state.loadGeneration) state.loading = false;
     }
   };
 
@@ -753,7 +793,11 @@
   symbolButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const instrumentId = button.dataset.instrumentId;
-      if (!instrumentsById.has(instrumentId) || instrumentId === state.activeInstrumentId) return;
+      if (!instrumentsById.has(instrumentId)) {
+        setStatus(`Unknown instrument: ${instrumentId || "missing ID"}`, "locked");
+        return;
+      }
+      if (instrumentId === state.activeInstrumentId) return;
       state.activeInstrumentId = instrumentId;
       resetForSelection();
       if (state.activeView === "tradingview") loadTradingView({ force: true });
