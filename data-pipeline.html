@@ -11,11 +11,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script src="theme-init.js?v=theme-1"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=public-7" />
-    <script src="script.js?v=public-7" defer></script>
+    <link rel="stylesheet" href="style.css?v=public-8" />
+    <script src="script.js?v=public-8" defer></script>
     <script src="pipeline-config.js?v=public-6" defer></script>
-    <script src="pipeline-core.js?v=public-7" defer></script>
-    <script src="data-pipeline-chart.js?v=public-7" defer></script>
+    <script src="data-pipeline-chart.js?v=public-8" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
@@ -64,33 +63,33 @@
           </div>
         </div>
 
-        <div class="pipeline-metrics" aria-label="Latest market values">
-          <div class="metric-primary"><span>Last price</span><strong id="metric-price">—</strong><small id="metric-change">Waiting for data</small></div>
-          <div><span>Session volume</span><strong id="metric-volume">—</strong><small>shares</small></div>
-          <div><span id="metric-candle-label">5m candle</span><strong id="metric-time">—</strong><small id="metric-timezone">Asia/Seoul</small></div>
-          <div><span>Data age</span><strong id="metric-lag">—</strong><small id="metric-lag-label">not measured</small></div>
+        <div class="pipeline-metrics" aria-label="Chart access information">
+          <div class="metric-primary"><span>Access</span><strong>PUBLIC</strong><small>No account required</small></div>
+          <div><span>Chart tools</span><strong>FULL</strong><small>intervals, drawing, indicators</small></div>
+          <div><span>Exchange time</span><strong id="metric-timezone">Asia/Seoul</strong><small>chart follows venue</small></div>
+          <div><span>Data level</span><strong>VENUE</strong><small>real-time / delayed by provider</small></div>
         </div>
 
         <div class="pipeline-chart-panel">
           <div class="pipeline-chart-tools">
-            <div class="pipeline-timeframes" aria-label="Chart timeframe">
-              <button type="button" class="is-active" data-timeframe="5m" aria-pressed="true">5m</button>
-              <button type="button" data-timeframe="120m" aria-pressed="false">120m</button>
-              <button type="button" data-timeframe="1d" aria-pressed="false">1D</button>
-              <span id="pipeline-timeframe-note">Drag horizontally to explore history</span>
+            <div class="pipeline-timeframes" aria-label="Chart guidance">
+              <span>Use the chart toolbar for intervals, drawing tools, and indicators</span>
             </div>
-            <div class="pipeline-legend" aria-label="Chart legend">
-              <span><i class="legend-up"></i>Up</span>
-              <span><i class="legend-down"></i>Down</span>
-              <button class="pipeline-follow is-active" id="pipeline-follow" type="button" aria-pressed="true">Auto-follow</button>
-            </div>
+            <div class="pipeline-legend" aria-label="Market data source"><span>Interactive chart · TradingView data</span></div>
           </div>
-          <div class="pipeline-canvas-wrap" id="pipeline-canvas-wrap">
-            <canvas id="pipeline-chart" aria-label="Interactive public candlestick chart"></canvas>
-            <div class="pipeline-tooltip" id="pipeline-tooltip" role="status" aria-live="polite"></div>
+          <div class="pipeline-canvas-wrap pipeline-widget-wrap">
+            <div id="market-chart-host" class="pipeline-market-chart">
+              <iframe
+                id="market-chart-frame"
+                class="pipeline-market-frame"
+                title="Samsung Electronics interactive market chart"
+                loading="eager"
+                allowfullscreen
+              ></iframe>
+            </div>
           </div>
           <div class="pipeline-stream-state" role="status" aria-live="polite">
-            <span><i id="stream-dot"></i><b id="stream-status">Connecting to public market data</b></span>
+            <span><i id="stream-dot" class="is-live"></i><b id="stream-status">Public chart loading</b></span>
             <span id="stream-updated">No sign-in required</span>
           </div>
         </div>
@@ -113,9 +112,9 @@
         <aside class="pipeline-health reveal" aria-labelledby="health-title">
           <div class="pipeline-section-head"><div><span class="pipeline-overline">Access boundary</span><h2 id="health-title">Public vs. private</h2></div></div>
           <dl class="pipeline-health-list">
-            <div><dt>Market display</dt><dd id="health-mode">Connecting</dd></div>
-            <div><dt>Public OHLCV</dt><dd id="health-public" class="health-good">Released</dd></div>
-            <div><dt>Chart interval</dt><dd id="health-interval">5 minutes</dd></div>
+            <div><dt>Market display</dt><dd class="health-good">Public</dd></div>
+            <div><dt>Paper results</dt><dd class="health-good">Public</dd></div>
+            <div><dt>Chart tools</dt><dd class="health-good">Enabled</dd></div>
             <div><dt>Future signals</dt><dd>Private</dd></div>
             <div><dt>Model &amp; features</dt><dd>Private</dd></div>
             <div><dt>Credentials</dt><dd>Private</dd></div>
@@ -135,8 +134,8 @@
             </p>
           </div>
           <ol class="pipeline-flow reveal" aria-label="Public data flow">
-            <li><span>01</span><div><strong>Market display</strong><p>Released OHLCV records power the public chart.</p></div></li>
-            <li><span>02</span><div><strong>Private research</strong><p>Order flow, features, and model inputs remain protected.</p></div></li>
+            <li><span>01</span><div><strong>Market display</strong><p>TradingView supplies the interactive public chart.</p></div></li>
+            <li><span>02</span><div><strong>Private research</strong><p>Collected records, features, and model inputs remain protected.</p></div></li>
             <li><span>03</span><div><strong>Paper execution</strong><p>The quant machine records completed simulated fills.</p></div></li>
             <li><span>04</span><div><strong>Public projection</strong><p>Sanitized RPCs expose results without strategy internals.</p></div></li>
             <li><span>05</span><div><strong>Public verification</strong><p>Visitors inspect performance, risk, costs, and trade history.</p></div></li>
@@ -147,8 +146,8 @@
       <section class="pipeline-notice section-shell reveal" aria-label="Market data notice">
         <span>Market data notice</span>
         <p id="pipeline-notice-copy">
-          The public chart reads only released OHLCV fields from the project database. Availability
-          follows each exchange session and the most recent completed collection or backfill run.
+          Chart data is supplied by TradingView and may be real-time, delayed, or end-of-day depending
+          on the exchange and provider package. The project's own collection remains available for research.
         </p>
       </section>
 
