@@ -3,30 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Testing Machine — an independent quantitative development project by Jongmin Park."
-    />
+    <meta name="description" content="Public paper-trading performance, risk, edge, positions, and completed trade history from the Quant Live Lab." />
     <meta name="theme-color" content="#080a0f" />
-    <title>Testing Machine — Jongmin Park</title>
+    <title>Quant Live Lab — Jongmin Park</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
+    <script src="pipeline-config.js?v=public-6" defer></script>
+    <script src="quant-live-lab.js?v=public-6" defer></script>
   </head>
-  <body>
+  <body class="quant-lab-page">
     <div class="page-noise" aria-hidden="true"></div>
     <div class="cursor-glow" aria-hidden="true"></div>
 
     <header class="site-header">
-      <a class="wordmark" href="index.html" aria-label="Jongmin Park — home">
-        <span>JM</span><span class="wordmark-dot">.</span>
-      </a>
+      <a class="wordmark" href="index.html" aria-label="Jongmin Park — home"><span>JM</span><span class="wordmark-dot">.</span></a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="index.html#about">About</a>
         <a href="index.html#work">Work</a>
@@ -35,56 +29,123 @@
       <a class="nav-link" href="index.html#testing-machine">Back to work</a>
     </header>
 
-    <main id="top" class="detail-main">
+    <main id="top" class="detail-main quant-lab-main">
       <section class="detail-hero section-shell" aria-labelledby="detail-title">
         <a class="detail-back reveal" href="index.html#testing-machine">← Quant Development</a>
-        <p class="detail-eyebrow reveal"><span>02</span> Quant Development</p>
-        <h1 id="detail-title" class="reveal">Testing<br /><em>Machine.</em></h1>
+        <p class="detail-eyebrow reveal"><span>02</span> Public paper-trading observatory</p>
+        <h1 id="detail-title" class="reveal">Quant Live<br /><em>Lab.</em></h1>
         <p class="detail-intro reveal">
-          A dedicated page for documenting the testing environment, its interaction
-          model, supported market data, simulation rules, and development decisions.
-          The detailed content will be developed through upcoming discussions.
+          Public evidence from a simulated quant portfolio: completed trades, equity,
+          returns, realized edge, drawdown, costs, and risk statistics. The algorithm,
+          feature design, parameters, model scores, and future signals stay private.
         </p>
         <div class="detail-meta reveal" aria-label="Project summary">
-          <div><span>Category</span><strong>Quant testing tool</strong></div>
-          <div><span>Status</span><strong>In development</strong></div>
-          <div><span>Documentation</span><strong>In preparation</strong></div>
+          <div><span>Access</span><strong>Public · no account</strong></div>
+          <div><span>Mode</span><strong>Paper trading only</strong></div>
+          <div><span>Status</span><strong id="quant-meta-status">Connecting</strong></div>
         </div>
       </section>
 
-      <section class="detail-placeholder" aria-labelledby="outline-title">
-        <div class="detail-placeholder-grid section-shell">
-          <div class="detail-placeholder-copy reveal">
-            <h2 id="outline-title">Project details,<br /><span>coming next.</span></h2>
-            <p>
-              This structure is ready to receive the full project explanation. No
-              testing behavior or performance claim is being finalized before we
-              discuss it together.
-            </p>
+      <section class="quant-lab-dashboard" aria-labelledby="quant-dashboard-title">
+        <div class="section-shell">
+          <div class="quant-lab-toolbar reveal">
+            <div>
+              <span class="pipeline-overline">Public performance feed</span>
+              <h2 id="quant-dashboard-title">Measured outcomes</h2>
+            </div>
+            <label class="quant-run-picker" for="quant-run-select">
+              <span>Published run</span>
+              <select id="quant-run-select" disabled><option>Waiting for data</option></select>
+            </label>
           </div>
-          <div class="detail-outline reveal" aria-label="Planned documentation sections">
-            <div class="detail-outline-row">
-              <span>01</span>
-              <div><h3>Project overview</h3><p>Purpose, intended workflow, and testing philosophy.</p></div>
-              <span>To discuss</span>
-            </div>
-            <div class="detail-outline-row">
-              <span>02</span>
-              <div><h3>Features & interaction</h3><p>Charts, assets, simulation controls, and user flow.</p></div>
-              <span>To discuss</span>
-            </div>
-            <div class="detail-outline-row">
-              <span>03</span>
-              <div><h3>Progress & roadmap</h3><p>Implemented versions, current limits, and next steps.</p></div>
-              <span>To discuss</span>
-            </div>
+
+          <div class="quant-status-strip reveal" role="status" aria-live="polite">
+            <span><i id="quant-status-dot"></i><b id="quant-status">Connecting to public results</b></span>
+            <span id="quant-updated">No update yet</span>
+          </div>
+
+          <div class="quant-metric-grid reveal" aria-label="Primary performance statistics">
+            <article><span>Cumulative return</span><strong id="quant-return">—</strong><small>Since published run start</small></article>
+            <article><span>Benchmark return</span><strong id="quant-benchmark">—</strong><small id="quant-benchmark-label">Published benchmark</small></article>
+            <article><span>Excess return</span><strong id="quant-excess">—</strong><small>Portfolio minus benchmark</small></article>
+            <article><span>Max drawdown</span><strong id="quant-drawdown">—</strong><small>Peak-to-trough</small></article>
+            <article><span>Sharpe ratio</span><strong id="quant-sharpe">—</strong><small>Risk-adjusted return</small></article>
+            <article><span>Sortino ratio</span><strong id="quant-sortino">—</strong><small>Downside-risk adjusted</small></article>
+            <article><span>Realized edge</span><strong id="quant-edge">—</strong><small id="quant-edge-sample">After-cost sample</small></article>
+            <article><span>Win rate</span><strong id="quant-win-rate">—</strong><small>Closed paper trades</small></article>
+          </div>
+
+          <div class="quant-grid-main">
+            <article class="quant-panel quant-equity-panel reveal" aria-labelledby="equity-title">
+              <div class="quant-panel-head">
+                <div><span class="pipeline-overline">Portfolio path</span><h3 id="equity-title">Equity vs. benchmark</h3></div>
+                <div class="quant-chart-legend"><span><i class="is-portfolio"></i>Portfolio</span><span><i class="is-benchmark"></i>Benchmark</span></div>
+              </div>
+              <div class="quant-equity-wrap">
+                <canvas id="quant-equity-chart" aria-label="Paper portfolio and benchmark return chart"></canvas>
+                <p id="quant-equity-empty" class="quant-empty-copy">No published equity observations yet.</p>
+              </div>
+            </article>
+
+            <aside class="quant-panel quant-stat-panel reveal" aria-labelledby="statistics-title">
+              <div class="quant-panel-head"><div><span class="pipeline-overline">Extended statistics</span><h3 id="statistics-title">Risk &amp; execution</h3></div></div>
+              <dl class="quant-stat-list">
+                <div><dt>Annualized return</dt><dd id="stat-annual-return">—</dd></div>
+                <div><dt>Annualized volatility</dt><dd id="stat-volatility">—</dd></div>
+                <div><dt>Downside volatility</dt><dd id="stat-downside">—</dd></div>
+                <div><dt>Profit factor</dt><dd id="stat-profit-factor">—</dd></div>
+                <div><dt>Turnover</dt><dd id="stat-turnover">—</dd></div>
+                <div><dt>Closed trades</dt><dd id="stat-trades">—</dd></div>
+                <div><dt>Total costs</dt><dd id="stat-costs">—</dd></div>
+                <div><dt>Edge confidence interval</dt><dd id="stat-edge-ci">—</dd></div>
+              </dl>
+            </aside>
+          </div>
+
+          <div class="quant-grid-main quant-grid-tables">
+            <article class="quant-panel reveal" aria-labelledby="positions-title">
+              <div class="quant-panel-head"><div><span class="pipeline-overline">Latest public snapshot</span><h3 id="positions-title">Positions</h3></div></div>
+              <div class="pipeline-table-wrap">
+                <table class="pipeline-table quant-table">
+                  <thead><tr><th>Instrument</th><th>Quantity</th><th>Market value</th><th>Weight</th><th>Unrealized P&amp;L</th></tr></thead>
+                  <tbody id="quant-positions-body"><tr class="pipeline-empty-row"><td colspan="5">No published positions yet.</td></tr></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="quant-panel reveal" aria-labelledby="trades-title">
+              <div class="quant-panel-head"><div><span class="pipeline-overline">Completed executions only</span><h3 id="trades-title">Paper trade history</h3></div></div>
+              <div class="pipeline-table-wrap">
+                <table class="pipeline-table quant-table">
+                  <thead><tr><th>Filled at</th><th>Instrument</th><th>Side</th><th>Quantity</th><th>Price</th><th>Fees + tax</th><th>Realized P&amp;L</th></tr></thead>
+                  <tbody id="quant-trades-body"><tr class="pipeline-empty-row"><td colspan="7">No completed public paper trades yet.</td></tr></tbody>
+                </table>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <a class="detail-next section-shell" href="quant-upcoming.html">
-        <span>Next project</span><strong>Upcoming…</strong><i>→</i>
-      </a>
+      <section class="pipeline-notice section-shell quant-disclosure reveal" aria-label="Paper trading disclosure">
+        <span>Simulation disclosure</span>
+        <p>
+          All results on this page are simulated and are not brokerage statements or investment advice.
+          Published returns must be read together with the stated fee and slippage assumptions. Historical
+          or simulated performance does not guarantee future results.
+        </p>
+      </section>
+
+      <section class="quant-private-boundary section-shell reveal" aria-labelledby="private-title">
+        <div><span class="pipeline-overline">Private boundary</span><h2 id="private-title">What is intentionally not exposed</h2></div>
+        <ul>
+          <li>Algorithm source code and decision formula</li>
+          <li>Feature definitions, weights, parameters, and model scores</li>
+          <li>Research philosophy and core intellectual property</li>
+          <li>Pending orders, future signals, credentials, and raw private records</li>
+        </ul>
+      </section>
+
+      <a class="detail-next section-shell" href="quant-upcoming.html"><span>Next project</span><strong>Upcoming…</strong><i>→</i></a>
     </main>
 
     <footer class="site-footer section-shell">

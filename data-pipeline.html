@@ -3,33 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="A live 5-minute market-data view and paper-trading dashboard by Jongmin Park."
-    />
+    <meta name="description" content="A public interactive market-data view for Samsung Electronics, SK hynix, QQQ, and VOO." />
     <meta name="theme-color" content="#080a0f" />
     <title>Data Pipeline — Jongmin Park</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preconnect" href="https://s3.tradingview.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
-    <script src="pipeline-config.js?v=live-3" defer></script>
-    <script src="pipeline-core.js?v=live-3" defer></script>
-    <script src="data-pipeline-chart.js?v=live-3" defer></script>
+    <script src="pipeline-config.js?v=public-6" defer></script>
+    <script src="data-pipeline-chart.js?v=public-6" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
     <div class="cursor-glow" aria-hidden="true"></div>
 
     <header class="site-header">
-      <a class="wordmark" href="index.html" aria-label="Jongmin Park — home">
-        <span>JM</span><span class="wordmark-dot">.</span>
-      </a>
+      <a class="wordmark" href="index.html" aria-label="Jongmin Park — home"><span>JM</span><span class="wordmark-dot">.</span></a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="index.html#about">About</a>
         <a href="index.html#work">Work</a>
@@ -42,126 +34,87 @@
       <section class="pipeline-intro section-shell" aria-labelledby="pipeline-title">
         <div>
           <a class="detail-back reveal" href="index.html#data-pipeline">← Quant Development</a>
-          <p class="pipeline-kicker reveal"><span>01</span> Market data infrastructure</p>
-          <h1 id="pipeline-title" class="reveal">Five-minute market state,<br /><em>kept in motion.</em></h1>
+          <p class="pipeline-kicker reveal"><span>01</span> Public market dashboard</p>
+          <h1 id="pipeline-title" class="reveal">Market history and live state,<br /><em>open to everyone.</em></h1>
         </div>
         <p class="pipeline-lede reveal">
-          KRX executions stream into a five-minute research record while the current
-          candle is refreshed separately for a low-latency operational view.
+          Explore Samsung Electronics, SK hynix, QQQ, and VOO without signing in.
+          Pan through price history and switch between five-minute, 120-minute, and daily views.
         </p>
       </section>
 
-      <section class="pipeline-dashboard section-shell reveal" aria-label="Market dashboard">
+      <section class="pipeline-dashboard section-shell reveal" aria-label="Public market dashboard">
         <div class="pipeline-dashboard-head">
           <div class="pipeline-symbol">
-            <div class="pipeline-symbol-mark" aria-hidden="true">SS</div>
+            <div class="pipeline-symbol-mark" id="pipeline-symbol-mark" aria-hidden="true">SE</div>
             <div>
-              <span class="pipeline-overline" id="pipeline-symbol-overline">DEMO · NOT MARKET DATA</span>
-              <h2 id="pipeline-symbol-name">Synthetic 5-minute preview</h2>
+              <span class="pipeline-overline" id="pipeline-symbol-overline">KRX · 005930</span>
+              <h2 id="pipeline-symbol-name">Samsung Electronics</h2>
             </div>
           </div>
           <div class="pipeline-head-actions">
             <div class="pipeline-symbol-tabs" aria-label="Select instrument">
               <button class="is-active" type="button" data-instrument-id="KRX:005930" aria-pressed="true">Samsung</button>
               <button type="button" data-instrument-id="KRX:000660" aria-pressed="false">SK hynix</button>
+              <button type="button" data-instrument-id="NASDAQ:QQQ" aria-pressed="false">QQQ</button>
+              <button type="button" data-instrument-id="NYSEARCA:VOO" aria-pressed="false">VOO</button>
             </div>
-            <span class="pipeline-mode" id="pipeline-mode"><i></i> Demo stream</span>
-            <button class="pipeline-follow is-active" id="pipeline-follow" type="button" aria-pressed="true">
-              Auto-follow
-            </button>
+            <span class="pipeline-mode is-live" id="pipeline-mode"><i></i> Public access</span>
           </div>
         </div>
 
-        <div class="pipeline-metrics" aria-label="Latest market values">
-          <div class="pipeline-price metric-primary">
-            <span>Last price</span>
-            <strong id="metric-price">—</strong>
-            <small id="metric-change">Waiting for data</small>
-          </div>
-          <div>
-            <span>Session volume</span>
-            <strong id="metric-volume">—</strong>
-            <small>shares</small>
-          </div>
-          <div>
-            <span>5m candle</span>
-            <strong id="metric-time">—</strong>
-            <small>Asia/Seoul</small>
-          </div>
-          <div>
-            <span>Pipeline lag</span>
-            <strong id="metric-lag">—</strong>
-            <small id="metric-lag-label">not measured</small>
-          </div>
+        <div class="pipeline-metrics" aria-label="Chart access information">
+          <div class="metric-primary"><span>Access</span><strong>PUBLIC</strong><small>No account required</small></div>
+          <div><span>Chart views</span><strong>5m · 120m · 1D</strong><small>price and volume</small></div>
+          <div><span>Exchange time</span><strong id="metric-timezone">Asia/Seoul</strong><small>chart follows venue</small></div>
+          <div><span>Data level</span><strong>VENUE</strong><small>real-time / delayed by provider</small></div>
         </div>
 
         <div class="pipeline-chart-panel">
           <div class="pipeline-chart-tools">
             <div class="pipeline-timeframes" aria-label="Chart timeframe">
-              <button type="button" class="is-active" aria-pressed="true">5m</button>
-              <span>Completed bars + live-forming candle</span>
+              <button type="button" class="is-active" data-timeframe="5m" aria-pressed="true">5m</button>
+              <button type="button" data-timeframe="120m" aria-pressed="false">120m</button>
+              <button type="button" data-timeframe="1d" aria-pressed="false">1D</button>
+              <span>Left-drag or touch-drag to explore history</span>
             </div>
-            <div class="pipeline-legend" aria-label="Chart legend">
-              <span><i class="legend-up"></i>Up</span>
-              <span><i class="legend-down"></i>Down</span>
-              <span><i class="legend-buy"></i>Buy</span>
-              <span><i class="legend-sell"></i>Sell</span>
-            </div>
+            <div class="pipeline-legend" aria-label="Market data source"><span>Interactive chart · TradingView data</span></div>
           </div>
-          <div class="pipeline-canvas-wrap" id="pipeline-canvas-wrap">
-            <canvas id="pipeline-chart" aria-label="Five-minute candlestick chart"></canvas>
-            <div class="pipeline-tooltip" id="pipeline-tooltip" role="status" aria-live="polite"></div>
+          <div class="pipeline-canvas-wrap pipeline-widget-wrap">
+            <div id="market-chart-host" class="pipeline-market-chart" aria-label="Interactive public candlestick chart">
+              <p class="pipeline-widget-loading">Loading public market chart…</p>
+            </div>
           </div>
           <div class="pipeline-stream-state" role="status" aria-live="polite">
-            <span><i id="stream-dot"></i><b id="stream-status">Starting demo stream</b></span>
-            <span id="stream-updated">No update yet</span>
+            <span><i id="stream-dot" class="is-live"></i><b id="stream-status">Public chart loading</b></span>
+            <span id="stream-updated">No sign-in required</span>
           </div>
         </div>
       </section>
 
       <section class="pipeline-lower section-shell">
-        <article class="pipeline-paper reveal" aria-labelledby="paper-title">
+        <article class="pipeline-paper reveal" aria-labelledby="public-scope-title">
           <div class="pipeline-section-head">
-            <div>
-              <span class="pipeline-overline">Execution layer</span>
-              <h2 id="paper-title">Paper trades</h2>
-            </div>
-            <span class="pipeline-armed">Signal engine pending</span>
+            <div><span class="pipeline-overline">Public scope</span><h2 id="public-scope-title">What visitors can inspect</h2></div>
+            <span class="pipeline-armed">Open dashboard</span>
           </div>
-          <div class="pipeline-table-wrap">
-            <table class="pipeline-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Side</th>
-                  <th>Price</th>
-                  <th>Quantity</th>
-                  <th>Strategy</th>
-                </tr>
-              </thead>
-              <tbody id="paper-trades-body">
-                <tr class="pipeline-empty-row">
-                  <td colspan="5">Demo markers are shown on the chart. Live orders remain disabled.</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="pipeline-access-grid">
+            <div><span>01</span><strong>Market charts</strong><p>Price, OHLC, volume, history, and common chart tools.</p></div>
+            <div><span>02</span><strong>Multiple horizons</strong><p>Five-minute, 120-minute, and daily market views.</p></div>
+            <div><span>03</span><strong>Paper results</strong><p>Completed trades, returns, edge, drawdown, and risk statistics.</p></div>
+            <div><span>04</span><strong>Clear provenance</strong><p>Provider attribution, data-level notice, and update status.</p></div>
           </div>
         </article>
 
         <aside class="pipeline-health reveal" aria-labelledby="health-title">
-          <div class="pipeline-section-head">
-            <div>
-              <span class="pipeline-overline">Data quality</span>
-              <h2 id="health-title">Pipeline health</h2>
-            </div>
-          </div>
+          <div class="pipeline-section-head"><div><span class="pipeline-overline">Access boundary</span><h2 id="health-title">Public vs. private</h2></div></div>
           <dl class="pipeline-health-list">
-            <div><dt>Mode</dt><dd id="health-mode">Demo</dd></div>
-            <div><dt>Chart interval</dt><dd>5 minutes</dd></div>
-            <div><dt>Source</dt><dd>KIS WebSocket</dd></div>
-            <div><dt>Duplicate guard</dt><dd class="health-good">Enabled</dd></div>
-            <div><dt>Incomplete bars</dt><dd class="health-good">Rejected</dd></div>
-            <div><dt>Public live feed</dt><dd id="health-public">Locked</dd></div>
+            <div><dt>Market display</dt><dd class="health-good">Public</dd></div>
+            <div><dt>Paper results</dt><dd class="health-good">Public</dd></div>
+            <div><dt>Completed fills</dt><dd class="health-good">Public</dd></div>
+            <div><dt>Future signals</dt><dd>Private</dd></div>
+            <div><dt>Model &amp; features</dt><dd>Private</dd></div>
+            <div><dt>Credentials</dt><dd>Private</dd></div>
           </dl>
         </aside>
       </section>
@@ -170,34 +123,33 @@
         <div class="section-shell pipeline-system-grid">
           <div class="pipeline-system-copy reveal">
             <span class="pipeline-overline">System design</span>
-            <h2 id="system-title">A short-lived process.<br /><em>A continuous record.</em></h2>
+            <h2 id="system-title">Public evidence.<br /><em>Private intelligence.</em></h2>
             <p>
-              One scheduled job holds the KRX stream through the session. Completed bars
-              enter the research store; a throttled current-candle snapshot powers the
-              chart. The browser can access only deliberately released chart fields.
+              The public site shows market context and auditable paper-trading outcomes.
+              Strategy code, feature engineering, parameters, model scores, and future signals
+              remain outside every public browser response.
             </p>
           </div>
-          <ol class="pipeline-flow reveal" aria-label="Data pipeline flow">
-            <li><span>01</span><div><strong>Schedule</strong><p>Start before the KRX session.</p></div></li>
-            <li><span>02</span><div><strong>Stream</strong><p>Receive executions and order-book changes.</p></div></li>
-            <li><span>03</span><div><strong>Aggregate</strong><p>Build exchange-aligned five-minute state.</p></div></li>
-            <li><span>04</span><div><strong>Store</strong><p>Keep completed bars and private research data.</p></div></li>
-            <li><span>05</span><div><strong>Display</strong><p>Refresh the forming candle every ten seconds.</p></div></li>
+          <ol class="pipeline-flow reveal" aria-label="Public data flow">
+            <li><span>01</span><div><strong>Market display</strong><p>Embedded provider data powers the public chart.</p></div></li>
+            <li><span>02</span><div><strong>Private research</strong><p>Collected KIS records remain in the research store.</p></div></li>
+            <li><span>03</span><div><strong>Paper execution</strong><p>The quant machine records completed simulated fills.</p></div></li>
+            <li><span>04</span><div><strong>Public projection</strong><p>Sanitized RPCs expose results without strategy internals.</p></div></li>
+            <li><span>05</span><div><strong>Public verification</strong><p>Visitors inspect performance, risk, costs, and trade history.</p></div></li>
           </ol>
         </div>
       </section>
 
       <section class="pipeline-notice section-shell reveal" aria-label="Market data notice">
-        <span>Public data notice</span>
-        <p id="pipeline-notice-copy">
-          Public live-market display remains locked until the provider's redistribution
-          permission is documented and the first live collection run passes validation.
+        <span>Market data notice</span>
+        <p>
+          Chart data is supplied by TradingView and may be real-time, delayed, or end-of-day
+          depending on the exchange and data package. The project's KIS-collected archive is
+          kept private until separate public-redistribution rights are documented.
         </p>
       </section>
 
-      <a class="detail-next section-shell" href="testing-machine.html">
-        <span>Next project</span><strong>Testing Machine</strong><i>→</i>
-      </a>
+      <a class="detail-next section-shell" href="testing-machine.html"><span>Next project</span><strong>Quant Live Lab</strong><i>→</i></a>
     </main>
 
     <footer class="site-footer section-shell">
