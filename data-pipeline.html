@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="style.css?v=public-8" />
     <script src="script.js?v=public-8" defer></script>
     <script src="pipeline-config.js?v=public-6" defer></script>
-    <script src="data-pipeline-chart.js?v=public-8" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
@@ -159,5 +158,102 @@
       <p>© <span id="year">2026</span> Jongmin Park</p>
       <p>QUANT DEVELOPMENT · SEOUL</p>
     </footer>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        "use strict";
+
+        const DASHBOARD_BUILD = "v9";
+        const frame = document.getElementById("market-chart-frame");
+        const tabs = document.querySelector(".pipeline-symbol-tabs");
+        if (!frame || !tabs) return;
+
+        const instruments = new Map([
+          ["KRX:005930", { symbol: "005930", name: "Samsung Electronics", market: "KRX", mark: "SE", timezone: "Asia/Seoul", tv: "KRX:005930" }],
+          ["KRX:000660", { symbol: "000660", name: "SK hynix", market: "KRX", mark: "SH", timezone: "Asia/Seoul", tv: "KRX:000660" }],
+          ["NASDAQ:QQQ", { symbol: "QQQ", name: "Invesco QQQ Trust", market: "NASDAQ", mark: "QQ", timezone: "America/New_York", tv: "NASDAQ:QQQ" }],
+          ["NYSEARCA:VOO", { symbol: "VOO", name: "Vanguard S&P 500 ETF", market: "NYSE Arca", mark: "VO", timezone: "America/New_York", tv: "AMEX:VOO" }],
+        ]);
+
+        const elements = {
+          name: document.getElementById("pipeline-symbol-name"),
+          overline: document.getElementById("pipeline-symbol-overline"),
+          mark: document.getElementById("pipeline-symbol-mark"),
+          timezone: document.getElementById("metric-timezone"),
+          status: document.getElementById("stream-status"),
+          updated: document.getElementById("stream-updated"),
+        };
+        const buttons = [...tabs.querySelectorAll("button[data-instrument-id]")];
+        const requested = new URLSearchParams(window.location.search).get("instrument");
+        let activeId = instruments.has(requested) ? requested : "KRX:005930";
+
+        const widgetUrl = (instrument) => {
+          const light = document.documentElement.dataset.theme === "light";
+          const params = new URLSearchParams({
+            frameElementId: "market-chart-frame",
+            symbol: instrument.tv,
+            interval: "5",
+            hidesidetoolbar: "0",
+            symboledit: "0",
+            saveimage: "1",
+            toolbarbg: light ? "#f5f7fb" : "#0a0d13",
+            studies: "[]",
+            theme: light ? "light" : "dark",
+            style: "1",
+            timezone: "exchange",
+            withdateranges: "1",
+            hideideas: "1",
+            locale: "en",
+            enablepublishing: "0",
+            allow_symbol_change: "0",
+            support_host: "https://www.tradingview.com",
+          });
+          return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+        };
+
+        const selectInstrument = (instrumentId) => {
+          if (!instruments.has(instrumentId)) return;
+          activeId = instrumentId;
+          const instrument = instruments.get(activeId);
+
+          elements.name.textContent = instrument.name;
+          elements.overline.textContent = `${instrument.market} · ${instrument.symbol}`;
+          elements.mark.textContent = instrument.mark;
+          elements.timezone.textContent = instrument.timezone;
+          buttons.forEach((button) => {
+            const selected = button.dataset.instrumentId === activeId;
+            button.classList.toggle("is-active", selected);
+            button.setAttribute("aria-pressed", String(selected));
+          });
+
+          elements.status.textContent = `Loading ${instrument.symbol} chart`;
+          elements.updated.textContent = `${DASHBOARD_BUILD} · requested ${instrument.tv}`;
+          frame.title = `${instrument.name} interactive market chart`;
+          frame.src = widgetUrl(instrument);
+
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set("instrument", activeId);
+          nextUrl.searchParams.set("build", "9");
+          nextUrl.hash = "market-dashboard";
+          window.history.replaceState(null, "", nextUrl);
+        };
+
+        tabs.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-instrument-id]");
+          if (!button) return;
+          event.preventDefault();
+          selectInstrument(button.dataset.instrumentId);
+        });
+
+        frame.addEventListener("load", () => {
+          const instrument = instruments.get(activeId);
+          elements.status.textContent = `${instrument.symbol} chart ready`;
+          elements.updated.textContent = `${DASHBOARD_BUILD} · ${instrument.tv} · TradingView`;
+        });
+
+        window.addEventListener("site-theme-change", () => selectInstrument(activeId));
+        window.__MARKET_DASHBOARD_BUILD__ = DASHBOARD_BUILD;
+        selectInstrument(activeId);
+      }, { once: true });
+    </script>
   </body>
 </html>
