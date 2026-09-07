@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A concise development record of Jongmin Park's quant data and paper-trading platform—its ambition, decisions, detours, fixes, and next steps."
+    />
+    <meta name="theme-color" content="#080a0f" />
+    <title>Project Footprint — Jongmin Park</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="theme-init.js?v=theme-1"></script>
+    <link rel="stylesheet" href="style.css?v=public-11" />
+    <script src="script.js?v=public-7" defer></script>
+  </head>
+  <body class="footprint-page">
+    <div class="page-noise" aria-hidden="true"></div>
+    <div class="cursor-glow" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="wordmark" href="index.html" aria-label="Jongmin Park — home">
+        <span>JM</span><span class="wordmark-dot">.</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html#about">About</a>
+        <a href="index.html#work">Work</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+      <a class="nav-link" href="index.html#project-footprint">Back to work</a>
+    </header>
+
+    <main id="top" class="detail-main">
+      <section class="detail-hero footprint-hero section-shell" aria-labelledby="footprint-title">
+        <a class="detail-back reveal" href="index.html#project-footprint">← Quant Development</a>
+        <p class="detail-eyebrow reveal"><span>03</span> Project record · 2026—ongoing</p>
+        <h1 id="footprint-title" class="reveal">Project<br /><em>Footprint.</em></h1>
+        <p class="detail-intro reveal">
+          The visible dashboard is only the surface. This is the short record behind it:
+          why the system began, what changed, what broke, and what remains unfinished.
+        </p>
+        <div class="detail-meta reveal" aria-label="Project record summary">
+          <div><span>North star</span><strong>Research-to-trading system</strong></div>
+          <div><span>Method</span><strong>Build · test · correct</strong></div>
+          <div><span>Record</span><strong>Public · selective</strong></div>
+        </div>
+      </section>
+
+      <section class="footprint-thesis" aria-labelledby="thesis-title">
+        <div class="footprint-thesis-grid section-shell">
+          <div class="reveal">
+            <span class="footprint-section-label">Original ambition</span>
+            <h2 id="thesis-title">Not a chart.<br /><em>A system.</em></h2>
+          </div>
+          <div class="footprint-thesis-copy reveal">
+            <p>
+              The project started with a real-time market chart, but the actual goal was
+              larger: collect trustworthy data, preserve it for long-term research, run a
+              quant machine without look-ahead, simulate realistic execution, and publish
+              evidence of performance without revealing the algorithm itself.
+            </p>
+            <div class="footprint-principles" aria-label="Core project principles">
+              <div><span>Observe</span><strong>Live market state</strong></div>
+              <div><span>Preserve</span><strong>Research-grade history</strong></div>
+              <div><span>Test</span><strong>Paper execution and risk</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="footprint-log section-shell" aria-labelledby="build-log-title">
+        <div class="footprint-log-head reveal">
+          <div>
+            <span class="footprint-section-label">Selected build log</span>
+            <h2 id="build-log-title">Progress includes<br />the wrong turns.</h2>
+          </div>
+          <p>
+            This is not a complete commit history. It records the decisions that changed
+            the architecture or revealed a false assumption.
+          </p>
+        </div>
+
+        <ol class="footprint-timeline">
+          <li class="footprint-entry reveal">
+            <span class="footprint-phase">Origin</span>
+            <div>
+              <div class="footprint-entry-topline"><span>Scope</span><span>Architecture</span></div>
+              <h3>The chart became a data contract.</h3>
+              <p>
+                Samsung Electronics, SK hynix, QQQ, and VOO became the first test universe.
+                Five-minute OHLCV, trades, and order-book state were separated from daily
+                fundamentals and investor flow. Older five-minute data would leave the hot
+                database only after 120-minute aggregation and verified Parquet archiving.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry reveal">
+            <span class="footprint-phase">Foundation</span>
+            <div>
+              <div class="footprint-entry-topline"><span>Supabase</span><span>Non-destructive migration</span></div>
+              <h3>A versioned store replaced the first prototype.</h3>
+              <p>
+                The initial one-minute, single-symbol structure was not deployed as the final
+                pipeline. A new schema added instruments, five-minute bars, order flow,
+                order-book summaries, 120-minute bars, point-in-time fields, and archive
+                audit records without deleting the original tables.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry reveal">
+            <span class="footprint-phase">Collection</span>
+            <div>
+              <div class="footprint-entry-topline"><span>KIS WebSocket</span><span>Cloud Run</span></div>
+              <h3>The first domestic collector passed preflight.</h3>
+              <p>
+                A scheduled Cloud Run Job was built to subscribe to Korean trade and quote
+                feeds for the two semiconductor stocks. Authentication, Supabase access, and
+                instrument registration passed preflight; weekday startup was scheduled for
+                08:55 KST, with operating cost accepted as a measured pilot rather than
+                assumed to be free.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry is-detour reveal">
+            <span class="footprint-phase">Detour 01</span>
+            <div>
+              <div class="footprint-entry-topline"><span>Missed session</span><span>Backfill limit</span></div>
+              <h3>Deploying after the open left a hole.</h3>
+              <p>
+                The first live deployment happened after the Korean session had begun, so
+                that day's intraday stream could not be reconstructed from a collector that
+                was not running. REST backfill recovered OHLCV, but not the missing historical
+                trade and order-book stream. A close catch-up step was added after the final
+                domestic bar stopped at 15:15.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry reveal">
+            <span class="footprint-phase">History</span>
+            <div>
+              <div class="footprint-entry-topline"><span>5m</span><span>120m</span><span>1D</span></div>
+              <h3>Available history was measured, not assumed.</h3>
+              <p>
+                Historical jobs populated domestic intraday data and multi-asset daily data.
+                The overseas probe showed roughly one month of regular-session five-minute
+                QQQ and VOO bars through the selected provider at that moment—1,638 rows per
+                instrument—so the public record now distinguishes provider availability from
+                the five-year history originally imagined.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry is-detour reveal">
+            <span class="footprint-phase">Detour 02</span>
+            <div>
+              <div class="footprint-entry-topline"><span>Public boundary</span><span>Reversal</span></div>
+              <h3>Administrator-only access was the wrong product.</h3>
+              <p>
+                The dashboard briefly moved toward private administrator access. That decision
+                was reversed: visitors should be able to inspect ordinary market charts and
+                completed paper-trading results without signing in. The protected boundary is
+                the intellectual property—features, weights, parameters, model scores, future
+                signals, credentials, and private raw records.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry is-detour reveal">
+            <span class="footprint-phase">Detour 03</span>
+            <div>
+              <div class="footprint-entry-topline"><span>Apple placeholder</span><span>Silent buttons</span><span>UI iteration</span></div>
+              <h3>A polished chart can still be wrong.</h3>
+              <p>
+                One embedded chart displayed Apple and Cboe One despite a Samsung header.
+                Another iteration restored the right data but removed useful chart tools.
+                QQQ and VOO then failed silently when configuration and in-flight requests
+                disagreed. The result is a hybrid view: the collected Supabase feed for data
+                truth, a separate provider-tools view, visible failure states, and a durable
+                four-instrument selection path.
+              </p>
+            </div>
+          </li>
+
+          <li class="footprint-entry reveal">
+            <span class="footprint-phase">Now</span>
+            <div>
+              <div class="footprint-entry-topline"><span>Prototype</span><span>Still in progress</span></div>
+              <h3>The public surface exists; the trading system does not—yet.</h3>
+              <p>
+                The site now exposes market-history views, provider tools, release controls,
+                and a public Quant Live Lab shell. Korean collection and historical storage
+                have working components. <strong>U.S. real-time collection, automatic cold
+                archiving, the paper execution engine, and published strategy statistics are
+                still unfinished.</strong>
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="footprint-state" aria-labelledby="state-title">
+        <div class="section-shell">
+          <div class="footprint-state-head reveal">
+            <div>
+              <span class="footprint-state-label">Current boundary</span>
+              <h2 id="state-title">What exists.<br /><em>What comes next.</em></h2>
+            </div>
+            <p>
+              Public evidence should grow only after the underlying process is reproducible.
+              An empty performance panel is more honest than invented backtest success.
+            </p>
+          </div>
+          <div class="footprint-state-grid reveal">
+            <article class="footprint-state-card">
+              <span class="footprint-state-label">Working foundation</span>
+              <h3>Built</h3>
+              <ul>
+                <li>Versioned Supabase market-data schema</li>
+                <li>Korean collector, scheduler, and catch-up path</li>
+                <li>Historical 5m, 120m, and daily chart storage</li>
+                <li>Public dashboard with Dark and White modes</li>
+              </ul>
+            </article>
+            <article class="footprint-state-card is-next">
+              <span class="footprint-state-label">Next validation</span>
+              <h3>Unfinished</h3>
+              <ul>
+                <li>U.S. real-time QQQ and VOO collection</li>
+                <li>Verified Parquet archive and retention automation</li>
+                <li>Point-in-time feature and paper execution engines</li>
+                <li>Live portfolio, edge, cost, and risk publication</li>
+              </ul>
+            </article>
+            <article class="footprint-state-card is-private">
+              <span class="footprint-state-label">Protected core</span>
+              <h3>Private</h3>
+              <ul>
+                <li>Algorithm source and decision formula</li>
+                <li>Features, weights, parameters, and model scores</li>
+                <li>Pending orders and future signals</li>
+                <li>Credentials and restricted raw records</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="footprint-lessons section-shell" aria-labelledby="lessons-title">
+        <span class="footprint-section-label reveal">Lessons carried forward</span>
+        <h2 id="lessons-title" class="reveal">The process changed<br />the specification.</h2>
+        <div class="footprint-lessons-grid reveal">
+          <article class="footprint-lesson">
+            <span class="footprint-lesson-index">01</span>
+            <div><h3>Data truth precedes display.</h3><p>A responsive chart is not proof that the underlying feed is correct, current, or licensed for the way it is shown.</p></div>
+          </article>
+          <article class="footprint-lesson">
+            <span class="footprint-lesson-index">02</span>
+            <div><h3>Backfill is not time travel.</h3><p>OHLCV can repair many gaps, but it cannot recreate trade sequence, quote state, or a collector that was never connected.</p></div>
+          </article>
+          <article class="footprint-lesson">
+            <span class="footprint-lesson-index">03</span>
+            <div><h3>Failures must be visible.</h3><p>Silent buttons and stale labels turn configuration mistakes into misleading interfaces. The system should state what failed.</p></div>
+          </article>
+          <article class="footprint-lesson">
+            <span class="footprint-lesson-index">04</span>
+            <div><h3>Public results need a private core.</h3><p>Performance can be inspectable while the algorithm, future intent, credentials, and research assets remain protected.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <a class="detail-next section-shell" href="quant-upcoming.html">
+        <span>Next project</span><strong>Upcoming…</strong><i>→</i>
+      </a>
+    </main>
+
+    <footer class="site-footer section-shell">
+      <a class="wordmark" href="index.html"><span>JM</span><span class="wordmark-dot">.</span></a>
+      <p>© <span id="year">2026</span> Jongmin Park</p>
+      <p>QUANT DEVELOPMENT · SEOUL</p>
+    </footer>
+  </body>
+</html>
