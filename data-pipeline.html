@@ -11,9 +11,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script src="theme-init.js?v=theme-1"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=public-8" />
-    <script src="script.js?v=public-8" defer></script>
+    <link rel="stylesheet" href="style.css?v=public-10" />
+    <script src="script.js?v=public-10" defer></script>
     <script src="pipeline-config.js?v=public-6" defer></script>
+    <script src="pipeline-core.js?v=public-10" defer></script>
+    <script src="data-pipeline-chart.js?v=public-10" defer></script>
   </head>
   <body class="pipeline-page">
     <div class="page-noise" aria-hidden="true"></div>
@@ -62,34 +64,56 @@
           </div>
         </div>
 
-        <div class="pipeline-metrics" aria-label="Chart access information">
-          <div class="metric-primary"><span>Access</span><strong>PUBLIC</strong><small>No account required</small></div>
-          <div><span>Chart tools</span><strong>FULL</strong><small>intervals, drawing, indicators</small></div>
-          <div><span>Exchange time</span><strong id="metric-timezone">Asia/Seoul</strong><small>chart follows venue</small></div>
-          <div><span>Data level</span><strong>VENUE</strong><small>real-time / delayed by provider</small></div>
+        <div class="pipeline-metrics" aria-label="Latest market values">
+          <div class="metric-primary"><span>Last price</span><strong id="metric-price">—</strong><small id="metric-change">Waiting for data</small></div>
+          <div><span>Session volume</span><strong id="metric-volume">—</strong><small>shares</small></div>
+          <div><span id="metric-candle-label">5m candle</span><strong id="metric-time">—</strong><small id="metric-timezone">Asia/Seoul</small></div>
+          <div><span>Data age</span><strong id="metric-lag">—</strong><small id="metric-lag-label">not measured</small></div>
         </div>
 
         <div class="pipeline-chart-panel">
-          <div class="pipeline-chart-tools">
-            <div class="pipeline-timeframes" aria-label="Chart guidance">
-              <span>Use the chart toolbar for intervals, drawing tools, and indicators</span>
-            </div>
-            <div class="pipeline-legend" aria-label="Market data source"><span>Interactive chart · TradingView data</span></div>
+          <div class="pipeline-view-tabs" role="tablist" aria-label="Chart data view">
+            <button id="pipeline-feed-tab" class="is-active" type="button" role="tab" data-chart-view="pipeline" aria-selected="true" aria-controls="pipeline-feed-view">Pipeline feed</button>
+            <button id="tradingview-tools-tab" type="button" role="tab" data-chart-view="tradingview" aria-selected="false" aria-controls="tradingview-tools-view">TradingView tools</button>
+            <span>Collected KIS data is the default view</span>
           </div>
-          <div class="pipeline-canvas-wrap pipeline-widget-wrap">
-            <div id="market-chart-host" class="pipeline-market-chart">
-              <iframe
-                id="market-chart-frame"
-                class="pipeline-market-frame"
-                title="Samsung Electronics interactive market chart"
-                loading="eager"
-                allowfullscreen
-              ></iframe>
+
+          <div id="pipeline-feed-view" role="tabpanel" aria-labelledby="pipeline-feed-tab">
+            <div class="pipeline-chart-tools">
+              <div class="pipeline-timeframes" aria-label="Chart timeframe">
+                <button type="button" class="is-active" data-timeframe="5m" aria-pressed="true">5m</button>
+                <button type="button" data-timeframe="120m" aria-pressed="false">120m</button>
+                <button type="button" data-timeframe="1d" aria-pressed="false">1D</button>
+                <span id="pipeline-timeframe-note">Drag horizontally to explore history</span>
+              </div>
+              <div class="pipeline-legend" aria-label="Chart legend">
+                <span><i class="legend-up"></i>Up</span>
+                <span><i class="legend-down"></i>Down</span>
+                <button class="pipeline-follow is-active" id="pipeline-follow" type="button" aria-pressed="true">Auto-follow</button>
+              </div>
+            </div>
+            <div class="pipeline-canvas-wrap" id="pipeline-canvas-wrap">
+              <canvas id="pipeline-chart" aria-label="Interactive public candlestick chart"></canvas>
+              <div class="pipeline-tooltip" id="pipeline-tooltip" role="status" aria-live="polite"></div>
+            </div>
+            <div class="pipeline-stream-state" role="status" aria-live="polite">
+              <span><i id="stream-dot"></i><b id="stream-status">Connecting to public market data</b></span>
+              <span id="stream-updated">No sign-in required</span>
             </div>
           </div>
-          <div class="pipeline-stream-state" role="status" aria-live="polite">
-            <span><i id="stream-dot" class="is-live"></i><b id="stream-status">Public chart loading</b></span>
-            <span id="stream-updated">No sign-in required</span>
+
+          <div id="tradingview-tools-view" role="tabpanel" aria-labelledby="tradingview-tools-tab" hidden>
+            <div class="pipeline-chart-tools">
+              <div class="pipeline-timeframes"><span>Provider chart with intervals, indicators, and drawing tools</span></div>
+              <div class="pipeline-legend"><span>TradingView data · venue timing may differ</span></div>
+            </div>
+            <div class="pipeline-canvas-wrap pipeline-widget-wrap">
+              <iframe id="market-chart-frame" class="pipeline-market-frame" title="TradingView interactive market chart" loading="eager" allowfullscreen></iframe>
+            </div>
+            <div class="pipeline-stream-state" role="status" aria-live="polite">
+              <span><i class="is-live"></i><b id="tradingview-status">Provider chart available on demand</b></span>
+              <span id="tradingview-updated">Uses TradingView data, not the collected pipeline feed</span>
+            </div>
           </div>
         </div>
       </section>
@@ -111,9 +135,9 @@
         <aside class="pipeline-health reveal" aria-labelledby="health-title">
           <div class="pipeline-section-head"><div><span class="pipeline-overline">Access boundary</span><h2 id="health-title">Public vs. private</h2></div></div>
           <dl class="pipeline-health-list">
-            <div><dt>Market display</dt><dd class="health-good">Public</dd></div>
-            <div><dt>Paper results</dt><dd class="health-good">Public</dd></div>
-            <div><dt>Chart tools</dt><dd class="health-good">Enabled</dd></div>
+            <div><dt>Market display</dt><dd id="health-mode">Connecting</dd></div>
+            <div><dt>Public OHLCV</dt><dd id="health-public" class="health-good">Released</dd></div>
+            <div><dt>Chart interval</dt><dd id="health-interval">5 minutes</dd></div>
             <div><dt>Future signals</dt><dd>Private</dd></div>
             <div><dt>Model &amp; features</dt><dd>Private</dd></div>
             <div><dt>Credentials</dt><dd>Private</dd></div>
@@ -133,8 +157,8 @@
             </p>
           </div>
           <ol class="pipeline-flow reveal" aria-label="Public data flow">
-            <li><span>01</span><div><strong>Market display</strong><p>TradingView supplies the interactive public chart.</p></div></li>
-            <li><span>02</span><div><strong>Private research</strong><p>Collected records, features, and model inputs remain protected.</p></div></li>
+            <li><span>01</span><div><strong>Market display</strong><p>Released OHLCV records power the public chart.</p></div></li>
+            <li><span>02</span><div><strong>Private research</strong><p>Order flow, features, and model inputs remain protected.</p></div></li>
             <li><span>03</span><div><strong>Paper execution</strong><p>The quant machine records completed simulated fills.</p></div></li>
             <li><span>04</span><div><strong>Public projection</strong><p>Sanitized RPCs expose results without strategy internals.</p></div></li>
             <li><span>05</span><div><strong>Public verification</strong><p>Visitors inspect performance, risk, costs, and trade history.</p></div></li>
@@ -145,8 +169,8 @@
       <section class="pipeline-notice section-shell reveal" aria-label="Market data notice">
         <span>Market data notice</span>
         <p id="pipeline-notice-copy">
-          Chart data is supplied by TradingView and may be real-time, delayed, or end-of-day depending
-          on the exchange and provider package. The project's own collection remains available for research.
+          The public chart reads only released OHLCV fields from the project database. Availability
+          follows each exchange session and the most recent completed collection or backfill run.
         </p>
       </section>
 
@@ -158,102 +182,5 @@
       <p>© <span id="year">2026</span> Jongmin Park</p>
       <p>QUANT DEVELOPMENT · SEOUL</p>
     </footer>
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        "use strict";
-
-        const DASHBOARD_BUILD = "v9";
-        const frame = document.getElementById("market-chart-frame");
-        const tabs = document.querySelector(".pipeline-symbol-tabs");
-        if (!frame || !tabs) return;
-
-        const instruments = new Map([
-          ["KRX:005930", { symbol: "005930", name: "Samsung Electronics", market: "KRX", mark: "SE", timezone: "Asia/Seoul", tv: "KRX:005930" }],
-          ["KRX:000660", { symbol: "000660", name: "SK hynix", market: "KRX", mark: "SH", timezone: "Asia/Seoul", tv: "KRX:000660" }],
-          ["NASDAQ:QQQ", { symbol: "QQQ", name: "Invesco QQQ Trust", market: "NASDAQ", mark: "QQ", timezone: "America/New_York", tv: "NASDAQ:QQQ" }],
-          ["NYSEARCA:VOO", { symbol: "VOO", name: "Vanguard S&P 500 ETF", market: "NYSE Arca", mark: "VO", timezone: "America/New_York", tv: "AMEX:VOO" }],
-        ]);
-
-        const elements = {
-          name: document.getElementById("pipeline-symbol-name"),
-          overline: document.getElementById("pipeline-symbol-overline"),
-          mark: document.getElementById("pipeline-symbol-mark"),
-          timezone: document.getElementById("metric-timezone"),
-          status: document.getElementById("stream-status"),
-          updated: document.getElementById("stream-updated"),
-        };
-        const buttons = [...tabs.querySelectorAll("button[data-instrument-id]")];
-        const requested = new URLSearchParams(window.location.search).get("instrument");
-        let activeId = instruments.has(requested) ? requested : "KRX:005930";
-
-        const widgetUrl = (instrument) => {
-          const light = document.documentElement.dataset.theme === "light";
-          const params = new URLSearchParams({
-            frameElementId: "market-chart-frame",
-            symbol: instrument.tv,
-            interval: "5",
-            hidesidetoolbar: "0",
-            symboledit: "0",
-            saveimage: "1",
-            toolbarbg: light ? "#f5f7fb" : "#0a0d13",
-            studies: "[]",
-            theme: light ? "light" : "dark",
-            style: "1",
-            timezone: "exchange",
-            withdateranges: "1",
-            hideideas: "1",
-            locale: "en",
-            enablepublishing: "0",
-            allow_symbol_change: "0",
-            support_host: "https://www.tradingview.com",
-          });
-          return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
-        };
-
-        const selectInstrument = (instrumentId) => {
-          if (!instruments.has(instrumentId)) return;
-          activeId = instrumentId;
-          const instrument = instruments.get(activeId);
-
-          elements.name.textContent = instrument.name;
-          elements.overline.textContent = `${instrument.market} · ${instrument.symbol}`;
-          elements.mark.textContent = instrument.mark;
-          elements.timezone.textContent = instrument.timezone;
-          buttons.forEach((button) => {
-            const selected = button.dataset.instrumentId === activeId;
-            button.classList.toggle("is-active", selected);
-            button.setAttribute("aria-pressed", String(selected));
-          });
-
-          elements.status.textContent = `Loading ${instrument.symbol} chart`;
-          elements.updated.textContent = `${DASHBOARD_BUILD} · requested ${instrument.tv}`;
-          frame.title = `${instrument.name} interactive market chart`;
-          frame.src = widgetUrl(instrument);
-
-          const nextUrl = new URL(window.location.href);
-          nextUrl.searchParams.set("instrument", activeId);
-          nextUrl.searchParams.set("build", "9");
-          nextUrl.hash = "market-dashboard";
-          window.history.replaceState(null, "", nextUrl);
-        };
-
-        tabs.addEventListener("click", (event) => {
-          const button = event.target.closest("button[data-instrument-id]");
-          if (!button) return;
-          event.preventDefault();
-          selectInstrument(button.dataset.instrumentId);
-        });
-
-        frame.addEventListener("load", () => {
-          const instrument = instruments.get(activeId);
-          elements.status.textContent = `${instrument.symbol} chart ready`;
-          elements.updated.textContent = `${DASHBOARD_BUILD} · ${instrument.tv} · TradingView`;
-        });
-
-        window.addEventListener("site-theme-change", () => selectInstrument(activeId));
-        window.__MARKET_DASHBOARD_BUILD__ = DASHBOARD_BUILD;
-        selectInstrument(activeId);
-      }, { once: true });
-    </script>
   </body>
 </html>

@@ -1626,6 +1626,51 @@ svg {
   padding: 0 28px 22px;
 }
 
+.pipeline-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 62px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pipeline-view-tabs button {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  cursor: pointer;
+}
+
+.pipeline-view-tabs button:hover,
+.pipeline-view-tabs button:focus-visible {
+  color: var(--ink);
+  border-color: rgba(135, 108, 255, 0.45);
+}
+
+.pipeline-view-tabs button.is-active {
+  border-color: rgba(66, 232, 189, 0.48);
+  background: rgba(66, 232, 189, 0.1);
+  color: var(--ink);
+}
+
+.pipeline-view-tabs > span {
+  margin-left: auto;
+  color: var(--subtle);
+  font-family: var(--mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#pipeline-feed-view[hidden],
+#tradingview-tools-view[hidden] {
+  display: none;
+}
+
 .pipeline-chart-tools {
   min-height: 58px;
 }
@@ -1929,6 +1974,8 @@ svg {
   .pipeline-follow { padding: 7px 9px; }
   .pipeline-metrics > div { padding: 18px 20px; }
   .pipeline-chart-panel { padding: 0 12px 14px; }
+  .pipeline-view-tabs { flex-wrap: wrap; padding-block: 12px; }
+  .pipeline-view-tabs > span { width: 100%; margin-left: 0; }
   .pipeline-chart-tools { align-items: flex-start; flex-direction: column; justify-content: center; min-height: 94px; gap: 12px; }
   .pipeline-legend { flex-wrap: wrap; gap: 10px 14px; }
   .pipeline-canvas-wrap { height: 390px; min-height: 390px; max-height: 390px; }
@@ -2503,6 +2550,8 @@ svg {
     linear-gradient(90deg, rgba(20, 28, 42, 0.025) 1px, transparent 1px),
     #ffffff;
 }
+:root[data-theme="light"] .pipeline-view-tabs button { background: rgba(20, 28, 42, 0.03); }
+:root[data-theme="light"] .pipeline-view-tabs button.is-active { background: rgba(0, 143, 108, 0.1); }
 :root[data-theme="light"] .pipeline-market-frame { background: #ffffff; }
 :root[data-theme="light"] .pipeline-tooltip {
   background: rgba(255, 255, 255, 0.96);
