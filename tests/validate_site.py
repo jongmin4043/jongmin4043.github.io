@@ -25,7 +25,6 @@ class AssetParser(HTMLParser):
 required_ids = {
     "pipeline-chart",
     "pipeline-mode",
-    "paper-trades-body",
     "stream-status",
     "health-public",
 }
@@ -44,9 +43,14 @@ for html_path in ROOT.glob("*.html"):
         missing_ids = required_ids - parser.ids
         if missing_ids:
             failures.append(f"data-pipeline.html: missing IDs {sorted(missing_ids)}")
+    if html_path.name == "testing-machine.html":
+        missing_ids = {"lp-charts", "lp-fills", "lp-status", "lp-stats", "lp-admin-controls"} - parser.ids
+        if missing_ids:
+            failures.append(f"testing-machine.html: missing live-paper IDs {sorted(missing_ids)}")
 
 if failures:
     print("\n".join(failures), file=sys.stderr)
     raise SystemExit(1)
 
 print("site asset validation passed")
+
