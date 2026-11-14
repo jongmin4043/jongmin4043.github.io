@@ -24,7 +24,9 @@
     />
     <script src="theme-init.js?v=theme-1"></script>
     <link rel="stylesheet" href="style.css?v=public-11" />
+    <link rel="stylesheet" href="interests.css?v=1" />
     <script src="script.js?v=public-7" defer></script>
+    <script src="interests.js?v=1" defer></script>
   </head>
   <body>
     <div class="page-noise" aria-hidden="true"></div>
@@ -159,10 +161,96 @@
                 <strong>Seoul National University</strong>
                 <p>Architecture · '26 Cohort</p>
               </div>
-              <div>
-                <span>INTERESTS</span>
-                <strong>Systems & Products</strong>
-                <p>Quant · Software · Apps</p>
+              <div class="about-interests">
+                <span id="interests-title">INTERESTS</span>
+                <ul class="interest-list" aria-labelledby="interests-title">
+                  <li class="interest-item">
+                    <strong class="interest-name">Reading</strong>
+                    <div class="interest-disclosure">
+                      <button class="interest-trigger" id="books-trigger" type="button" popovertarget="books-popover" aria-controls="books-popover" aria-expanded="false">
+                        Books I've ever read <i aria-hidden="true">↗</i>
+                      </button>
+                      <div class="interest-popover" id="books-popover" popover="auto" role="region" aria-labelledby="books-heading" tabindex="0">
+                        <h3 id="books-heading">Books I've ever read</h3>
+                        <ul class="interest-detail-list">
+                          <li>A History of Western Thought - Gunnar Skirbekk &amp; Nils Gilje</li>
+                          <li>The Structure of Scientific Revolutions - Thomas S. Kuhn</li>
+                          <li>Demian - Hermann Hesse</li>
+                          <li>Anna Karenina - Leo Tolstoy</li>
+                          <li>The Death of Ivan Ilyich - Leo Tolstoy</li>
+                          <li>White Nights - Fyodor Dostoevsky</li>
+                          <li>Crime and Punishment - Fyodor Dostoevsky</li>
+                          <li>The Brothers Karamazov - Fyodor Dostoevsky</li>
+                          <li>Discourse on the Method - René Descartes</li>
+                          <li>Silent Spring - Rachel Carson</li>
+                          <li>Dune (Volumes 1 &amp; 2) - Frank Herbert</li>
+                          <li>Aesthetic Odyssey - Jin Jung-kwon</li>
+                          <li>The Count of Monte Cristo - Alexandre Dumas</li>
+                          <li>The Great Gatsby - F. Scott Fitzgerald</li>
+                          <li>Journey to Mujin - Kim Seung-ok</li>
+                          <li>Faust - Johann Wolfgang von Goethe</li>
+                          <li>Brave New World - Aldous Huxley</li>
+                          <li>A Stray Bullet - Lee Beom-seon</li>
+                          <li>The Three-Body Problem - Liu Cixin</li>
+                          <li>Entropy: A New World View - Jeremy Rifkin &amp; Ted Howard</li>
+                          <li>One Up on Wall Street - Peter Lynch &amp; John Rothchild</li>
+                          <li>The Little Book of Common Sense Investing - John C. Bogle</li>
+                          <li>The Prince - Niccolò Machiavelli</li>
+                          <li>The Moon and Sixpence - W. Somerset Maugham</li>
+                          <li>Of Human Bondage - W. Somerset Maugham <small class="interest-reading-status">Currently reading</small></li>
+                          <li>The Stranger - Albert Camus</li>
+                          <li>A Portrait of Youthful Days - Yi Mun-yol</li>
+                          <li>Snow Country - Yasunari Kawabata</li>
+                          <li>The Unbearable Lightness of Being - Milan Kundera</li>
+                          <li>Pride and Prejudice - Jane Austen</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="interest-item">
+                    <strong class="interest-name">Mathematics</strong>
+                  </li>
+                  <li class="interest-item">
+                    <strong class="interest-name">Investment</strong>
+                  </li>
+                  <li class="interest-item">
+                    <strong class="interest-name">Classical Music</strong>
+                    <div class="interest-disclosure">
+                      <button class="interest-trigger" id="music-trigger" type="button" popovertarget="music-popover" aria-controls="music-popover" aria-expanded="false">
+                        Favorite works <i aria-hidden="true">↗</i>
+                      </button>
+                      <div class="interest-popover" id="music-popover" popover="auto" role="region" aria-labelledby="music-heading" tabindex="0">
+                        <h3 id="music-heading">Favorite classical works</h3>
+                        <ul class="interest-detail-list">
+                          <li>Piano Concerto No. 2 - Sergei Rachmaninoff</li>
+                          <li>Piano Concerto No. 3 - Sergei Rachmaninoff</li>
+                          <li>Symphony No. 2 - Sergei Rachmaninoff</li>
+                          <li>Symphony No. 5 - Pyotr Ilyich Tchaikovsky</li>
+                          <li>Symphony No. 6 - Pyotr Ilyich Tchaikovsky</li>
+                          <li>Symphony No. 2 - Jean Sibelius</li>
+                          <li>Serenade for Strings - Antonín Dvořák</li>
+                          <li>Waltzes - Johann Strauss II</li>
+                          <li>Piano Concerto - Robert Schumann</li>
+                          <li>Sposalizio - Franz Liszt</li>
+                          <li>Liebesträum No. 3 - Franz Liszt</li>
+                          <li>Piano Sonata No. 4 - Alexander Scriabin</li>
+                          <li>Valse, Op. 38 - Alexander Scriabin</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="interest-item">
+                    <strong class="interest-name">League of Legends</strong>
+                    <div class="interest-disclosure">
+                      <button class="interest-trigger" id="t1-trigger" type="button" popovertarget="t1-popover" aria-controls="t1-popover" aria-expanded="false">
+                        T1 <i aria-hidden="true">↗</i>
+                      </button>
+                      <div class="interest-popover interest-popover-small" id="t1-popover" popover="auto" role="region" aria-labelledby="faker-heading" tabindex="0">
+                        <h3 id="faker-heading">Faker</h3>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -383,3 +471,4 @@
     </footer>
   </body>
 </html>
+

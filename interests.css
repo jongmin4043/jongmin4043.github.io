@@ -1,0 +1,156 @@
+/* Personal interests: reuse the portfolio's existing type and theme tokens. */
+.about-interests {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.interest-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interest-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 46px;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.interest-item:last-child {
+  border-bottom: 0;
+}
+
+.interest-item .interest-name {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.interest-disclosure {
+  flex-shrink: 0;
+  max-width: 58%;
+}
+
+.interest-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  line-height: 1.6;
+  text-align: right;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 5px;
+  cursor: pointer;
+}
+
+.interest-trigger i {
+  color: var(--mint);
+  font-style: normal;
+  text-decoration: none;
+}
+
+.interest-trigger:hover,
+.interest-trigger[aria-expanded="true"] {
+  color: var(--ink);
+  text-decoration-color: var(--mint);
+}
+
+.interest-trigger:focus-visible,
+.interest-popover:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 5px;
+}
+
+.interest-popover {
+  position: fixed;
+  inset: auto;
+  z-index: 50;
+  width: min(36rem, calc(100vw - 32px));
+  max-height: min(30rem, calc(100dvh - 32px));
+  margin: 0;
+  padding: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.24);
+  font-family: var(--sans);
+  scrollbar-width: thin;
+  scrollbar-color: var(--subtle) var(--panel);
+}
+
+.interest-popover[hidden] {
+  display: none;
+}
+
+.interest-popover h3 {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.interest-detail-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.interest-reading-status {
+  display: block;
+  margin-top: 3px;
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+}
+
+.interest-popover-small {
+  width: 160px;
+}
+
+.interest-popover-small h3 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 1rem;
+}
+
+@media (max-width: 380px) {
+  .interest-item {
+    gap: 8px;
+  }
+
+  .interest-item .interest-name {
+    font-size: 0.78rem;
+  }
+
+  .interest-trigger {
+    font-size: 0.6rem;
+  }
+
+  .interest-popover {
+    padding: 18px;
+  }
+}
