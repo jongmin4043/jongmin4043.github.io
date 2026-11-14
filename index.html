@@ -25,8 +25,10 @@
     <script src="theme-init.js?v=theme-1"></script>
     <link rel="stylesheet" href="style.css?v=public-11" />
     <link rel="stylesheet" href="interests.css?v=1" />
+    <link rel="stylesheet" href="music.css?v=1" />
     <script src="script.js?v=public-7" defer></script>
     <script src="interests.js?v=1" defer></script>
+    <script src="music.js?v=1" defer></script>
   </head>
   <body>
     <div class="page-noise" aria-hidden="true"></div>
@@ -459,6 +461,32 @@
         </div>
       </section>
     </main>
+
+    <aside class="music-player" id="music-player" aria-label="Background music" hidden>
+      <audio id="background-music" preload="none" loop data-src="https://archive.org/download/dso20081018/dso20081018-007-tchai-symph5-mvt3_vbr.mp3"></audio>
+      <button class="music-toggle" id="music-toggle" type="button" aria-label="Play background music" aria-pressed="false" title="Play background music">
+        <svg class="music-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" /></svg>
+        <svg class="music-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+      </button>
+      <div class="music-copy">
+        <p class="music-composer">Tchaikovsky</p>
+        <p class="music-work">Symphony No. 5 · III. Valse</p>
+        <p class="music-status" id="music-status" role="status" aria-live="polite">Play a little music</p>
+      </div>
+      <div class="music-options">
+        <label class="music-volume-label" for="music-volume">Volume</label>
+        <input class="music-volume" id="music-volume" type="range" min="0" max="100" step="1" value="20" aria-label="Background music volume" />
+        <details class="music-credits">
+          <summary aria-label="Recording credits" title="Recording credits">i</summary>
+          <div class="music-credits-panel">
+            <p><strong>Symphony No. 5 in E minor, Op. 64</strong><br />III. Valse: Allegro moderato</p>
+            <p>Pyotr Ilyich Tchaikovsky<br />DuPage Symphony Orchestra<br />Barbara Schubert, conductor<br />Recorded October 18, 2008.</p>
+            <p><a href="https://archive.org/details/dso20081018" target="_blank" rel="noreferrer">Original recording ↗</a><br /><a href="https://imslp.org/wiki/Symphony_No.5,_Op.64_(Tchaikovsky,_Pyotr)" target="_blank" rel="noreferrer">Recording details ↗</a><br /><a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" target="_blank" rel="noreferrer">CC BY-NC-ND 3.0 ↗</a></p>
+            <p>Unmodified recording, streamed from Internet Archive.</p>
+          </div>
+        </details>
+      </div>
+    </aside>
 
     <div class="theme-control section-shell">
       <label for="theme-toggle">
