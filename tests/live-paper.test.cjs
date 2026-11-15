@@ -26,12 +26,12 @@ async function main(){
  });
  vm.runInContext(fs.readFileSync('live-paper.js','utf8'),ctx);await new Promise(r=>setTimeout(r,30));
  assert.equal(dom['lp-charts'].children.length,4);assert.deepEqual(dom['lp-charts'].children.map(c=>c.children[0].children[0].textContent),symbols);
- assert.equal(dom['lp-stats'].children.length,8);assert.match(dom['lp-since'].textContent,/가상 초기자본/);assert.equal(dom['lp-fills'].children.length,1);
+ assert.equal(dom['lp-stats'].children.length,8);assert.match(dom['lp-since'].textContent,/Initial virtual capital/);assert.equal(dom['lp-fills'].children.length,1);
  const chart=dom['lp-charts'].children[2].children[1],point=chart.arcs.at(-1);assert.ok(point);
- chart.listeners.pointermove({clientX:point[0],clientY:point[1]});assert.equal(dom['lp-tooltip'].hidden,false);assert.match(dom['lp-tooltip'].textContent,/TQQQ 매수 10주/);assert.match(dom['lp-tooltip'].textContent,/141.00/);
+ chart.listeners.pointermove({clientX:point[0],clientY:point[1]});assert.equal(dom['lp-tooltip'].hidden,false);assert.match(dom['lp-tooltip'].textContent,/TQQQ Buy 10 shares/);assert.match(dom['lp-tooltip'].textContent,/141.00/);
  chart.listeners.pointerleave();assert.equal(dom['lp-tooltip'].hidden,true);
  await buttons[1].listeners.click();assert.ok(requests.filter(r=>r.url.endsWith('/lp_public_bars')).slice(-4).every(r=>r.body.p_interval==='5m'));
- await dom['lp-stop'].listeners.click();assert.match(dom['lp-admin-message'].textContent,/관리자 로그인/);assert.equal(requests.filter(r=>r.url.endsWith('/lp_submit_command')).length,0);
+ await dom['lp-stop'].listeners.click();assert.match(dom['lp-admin-message'].textContent,/Administrator sign-in/);assert.equal(requests.filter(r=>r.url.endsWith('/lp_submit_command')).length,0);
  dom['lp-email'].value='owner@example.test';dom['lp-password'].value='not-a-real-password';await dom['lp-login'].listeners.submit({preventDefault(){}});
  assert.equal(dom['lp-admin-controls'].hidden,false);assert.equal(dom['lp-password'].value,'');
  dom['lp-model'].files=[{size:100,text:async()=>JSON.stringify({schema:'quant-model/v2',private:'test-only'})}];await dom['lp-model'].listeners.change();dom['lp-qualified'].checked=true;dom['lp-costs'].checked=true;

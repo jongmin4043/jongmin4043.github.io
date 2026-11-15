@@ -5,75 +5,75 @@ const labels={UPRO:'S&P 500 · +3×',SPXU:'S&P 500 · −3×',TQQQ:'Nasdaq-100 �
 const charts=new Map();let interval='1m',fills=[],current=null,auth=null,admin=false,busy=false,runId=null,selectedModel=null,authEpoch=0;
 const usd=v=>Number.isFinite(v)?'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
 const pct=v=>Number.isFinite(v)?(v*100).toFixed(2)+'%':'—';
-const date=v=>v?new Date(typeof v==='number'?v*1000:v).toLocaleString('ko-KR',{timeZone:'America/New_York',hour12:false}):'—';
+const date=v=>v?new Date(typeof v==='number'?v*1000:v).toLocaleString('en-US',{timeZone:'America/New_York',hour12:false}):'—';
 function el(tag,text,className){const e=document.createElement(tag);if(text!=null)e.textContent=text;if(className)e.className=className;return e}
 async function request(path,body,token=auth?.access_token){
- if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)throw Error('Supabase 공개 연결 설정이 필요합니다.');
+ if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)throw Error('Public Supabase connection settings are required.');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
  const headers={'Content-Type':'application/json',apikey:cfg.supabasePublishableKey};if(token)headers.Authorization='Bearer '+token;
  try{const r=await fetch(cfg.supabaseUrl.replace(/\/$/,'')+path,{method:'POST',headers,body:JSON.stringify(body||{}),signal:controller.signal,cache:'no-store'});const data=await r.json();
- if(!r.ok)throw Error(r.status===404?'운영 DB 초기 설정이 필요합니다.':r.status===401||r.status===403?'로그인 또는 관리자 권한을 확인하세요.':data.message||data.msg||'서버 요청 실패');return data;
+ if(!r.ok)throw Error(r.status===404?'The live database schema must be installed.':r.status===401||r.status===403?'Check your sign-in and administrator permissions.':data.message||data.msg||'Server request failed');return data;
  }finally{clearTimeout(timer)}
 }
 const rpc=(name,payload)=>request('/rest/v1/rpc/'+name,payload);
 function status(data){
  current=data;const stale=data.updated_at&&Date.now()-Date.parse(data.updated_at)>20000;
  $('lp-status').textContent=[data.status||'NOT_CONNECTED',stale?'ENGINE OFFLINE':data.feed_status||''].filter(Boolean).join(' / ');
- $('lp-updated').textContent=data.updated_at?'최근 갱신 '+date(data.updated_at)+' NY':'아직 운영 프로세스가 연결되지 않았습니다.';
- $('lp-notice').textContent=stale?'운영 프로세스의 갱신이 중단됐습니다. 마지막 기록을 표시하며 실시간 성과로 표시하지 않습니다.':!data.public_market_data&&!admin?'시세 공개 권한 확인 전입니다. 운영 연결 후 공개 승인이 완료되면 네 차트가 자동 갱신됩니다.':'실제 주문 없는 내부 Paper Trading · IBKR 시세 · 거래 점은 완료된 가상 체결만 표시합니다.';
- const metrics=[['Portfolio NAV',usd(data.nav)],['Net return',pct(data.net_return)],['보유 현금',usd(data.cash)],['Max Drawdown',pct(data.max_drawdown)],['체결 / 주문',`${data.fills_count??0} / ${data.orders_count??0}`],['누적 거래비용',usd(data.fees)],['실현 손익',usd(data.realized_pnl)],['미실현 손익',usd(data.unrealized_pnl)]];
+ $('lp-updated').textContent=data.updated_at?'Last updated '+date(data.updated_at)+' NY':'The private engine has not connected yet.';
+ $('lp-notice').textContent=stale?'Engine updates have stopped. These are the last recorded values, not current live performance.':!data.public_market_data&&!admin?'Public market-data display is awaiting authorization. The four charts update automatically once the engine is connected and publication is enabled.':'Internal paper trading · IBKR market data · No broker orders · Markers show completed virtual fills only.';
+ const metrics=[['Portfolio NAV',usd(data.nav)],['Net return',pct(data.net_return)],['Cash balance',usd(data.cash)],['Max Drawdown',pct(data.max_drawdown)],['Fills / orders',`${data.fills_count??0} / ${data.orders_count??0}`],['Total trading costs',usd(data.fees)],['Realized P&L',usd(data.realized_pnl)],['Unrealized P&L',usd(data.unrealized_pnl)]];
  $('lp-stats').replaceChildren(...metrics.map(([label,value])=>{const d=el('article',null,'lp-stat');d.append(el('small',label),el('strong',value));return d}));
- $('lp-since').textContent=data.started_at?`${date(data.started_at)} NY부터 · 가상 초기자본 ${usd(data.initial_cash)} · 모델 버전 ${data.model_version||'—'} · 결과는 가상 체결입니다.`:'검증된 모델 입력 및 운영 연결을 기다리고 있습니다.';
- $('lp-positions').replaceChildren(...symbols.map(s=>{const d=el('div',null,'lp-allocation');d.append(el('span',s),el('span',`${data.positions?.[s]??0}주 · ${data.marks?.[s]!=null?usd((data.positions?.[s]||0)*data.marks[s]):'가격 비공개/대기'}`));return d}));
- const review=data.daily_review;$('lp-review').textContent=review?`${review.day||''} / ${review.status||'WAITING'}${review.reason?' · '+review.reason:''}${review.paper_day?.net_return!=null?' · 당일 Paper '+pct(review.paper_day.net_return)+' / 체결 '+review.paper_day.fills_count+'회':''}${review.candidate_net_return!=null?' · 후보 '+pct(review.candidate_net_return)+' / 기존 '+pct(review.incumbent_net_return):''}`:'아직 완료된 일일 비교가 없습니다.';
+ $('lp-since').textContent=data.started_at?`${date(data.started_at)} NY · Initial virtual capital ${usd(data.initial_cash)} · Model version ${data.model_version||'—'} · Simulated executions only.`:'Waiting for an evaluated model and the private engine connection.';
+ $('lp-positions').replaceChildren(...symbols.map(s=>{const d=el('div',null,'lp-allocation');d.append(el('span',s),el('span',`${data.positions?.[s]??0} shares · ${data.marks?.[s]!=null?usd((data.positions?.[s]||0)*data.marks[s]):'Price private / pending'}`));return d}));
+ const review=data.daily_review;$('lp-review').textContent=review?`${review.day||''} / ${review.status||'WAITING'}${review.reason?' · '+review.reason:''}${review.paper_day?.net_return!=null?' · Daily paper return '+pct(review.paper_day.net_return)+' / Fills '+review.paper_day.fills_count:''}${review.candidate_net_return!=null?' · Candidate '+pct(review.candidate_net_return)+' / Incumbent '+pct(review.incumbent_net_return):''}`:'No daily comparison has completed yet.';
 }
 let performanceData=null,performanceAt=0,performanceRun=null,performanceEpoch=-1,performancePoints=[],performanceError=null,performanceView='all';
-const historyStatus={PENDING:'과거 재생 대기',RUNNING:'과거 데이터로 가상 매매 재생 중',COMPLETE:'과거 재생 완료',FAILED:'과거 재생 실패 · 기존 실시간 계좌는 유지됩니다',CANCELLED:'과거 재생 중지 · Start로 재시도할 수 있습니다'};
+const historyStatus={PENDING:'Historical replay pending',RUNNING:'Replaying historical paper trades',COMPLETE:'Historical replay complete',FAILED:'Historical replay failed · Live account preserved',CANCELLED:'Historical replay cancelled · Select Start to retry'};
 function renderPerformance(){
  const history=performanceData?.historical,meta=history?.meta||current?.daily_review?.historical_replay||{},canvas=$('lp-performance-canvas');
- $('lp-history-start').textContent=meta.simulation_start?date(meta.simulation_start)+' NY':'보유 데이터 확인 대기';
- $('lp-actual-start').textContent=current?.started_at?date(current.started_at)+' NY':'아직 시작하지 않음';
- if(performanceError)$('lp-history-status').textContent=performanceError;else if(meta.status)$('lp-history-status').textContent=(historyStatus[meta.status]||meta.status)+(meta.status==='RUNNING'?' · '+(meta.phase||''):meta.cloud_status==='MIGRATION_OR_CONNECTION_REQUIRED'?' · 과거 그래프 DB 설정/연결 확인 필요':'');
+ $('lp-history-start').textContent=meta.simulation_start?date(meta.simulation_start)+' NY':'Waiting for available history';
+ $('lp-actual-start').textContent=current?.started_at?date(current.started_at)+' NY':'Not started';
+ if(performanceError)$('lp-history-status').textContent=performanceError;else if(meta.status)$('lp-history-status').textContent=(historyStatus[meta.status]||meta.status)+(meta.status==='RUNNING'?' · '+(meta.phase||''):meta.cloud_status==='MIGRATION_OR_CONNECTION_REQUIRED'?' · Check the historical chart database setup or connection':'');
  const historyRows=(history?.curve||[]).filter(p=>Number.isFinite(p.at)&&Number.isFinite(p.nav)),initial=Number(history?.meta?.initial_cash),liveInitial=Number(performanceData?.initial_cash||current?.initial_cash);
- const historical=initial>0?historyRows.map(p=>({at:p.at,index:p.nav/initial*100,phase:'과거 재현 · 사후 시뮬레이션'})):[];
+ const historical=initial>0?historyRows.map(p=>({at:p.at,index:p.nav/initial*100,phase:'Historical replay · retrospective simulation'})):[];
  const base=historical.length?historical.at(-1).index:100;
- const live=(performanceData?.live||[]).filter(p=>Number.isFinite(p.at)&&Number.isFinite(p.nav)).map(p=>({at:p.at,index:liveInitial>0?base*p.nav/liveInitial:100,phase:'실제 관측 모의거래'}));
+ const live=(performanceData?.live||[]).filter(p=>Number.isFinite(p.at)&&Number.isFinite(p.nav)).map(p=>({at:p.at,index:liveInitial>0?base*p.nav/liveInitial:100,phase:'Observed live paper trading'}));
  const update=Date.parse(current?.updated_at)/1000;
- if(live.length&&current?.feed_status==='LIVE'&&Date.now()/1000-update<20&&Number.isFinite(current.nav)&&update>live.at(-1).at)live.push({at:update,index:base*current.nav/liveInitial,phase:'실제 관측 모의거래'});
+ if(live.length&&current?.feed_status==='LIVE'&&Date.now()/1000-update<20&&Number.isFinite(current.nav)&&update>live.at(-1).at)live.push({at:update,index:base*current.nav/liveInitial,phase:'Observed live paper trading'});
  const all=[...historical,...live],drawHistory=performanceView==='live'?[]:historical,drawLive=live,visible=[...drawHistory,...drawLive];performancePoints=[];
  const ratio=window.devicePixelRatio||1,w=canvas.clientWidth||900,h=canvas.clientHeight||310;canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);const x=canvas.getContext('2d');x.setTransform(ratio,0,0,ratio,0,0);x.clearRect(0,0,w,h);
  const style=getComputedStyle(document.body),color=k=>style.getPropertyValue(k).trim();x.font='11px DM Mono,monospace';x.fillStyle=color('--lp-muted');
- if(!visible.length){x.fillText('Start 후 과거 재생과 실시간 기록을 표시합니다.',16,h/2);return}
+ if(!visible.length){x.fillText('Select Start to load replay and live history.',16,h/2);return}
  let low=Math.min(...visible.map(p=>p.index)),high=Math.max(...visible.map(p=>p.index));const pad=Math.max((high-low)*.1,1);low-=pad;high+=pad;
  const begin=visible[0].at,end=Math.max(begin+60,visible.at(-1).at),px=t=>50+(t-begin)/(end-begin)*(w-68),py=v=>20+(high-v)/(high-low)*(h-60);
  for(let i=0;i<=4;i++){const n=low+(high-low)*i/4,yy=py(n);x.strokeStyle=color('--lp-line');x.beginPath();x.moveTo(50,yy);x.lineTo(w-18,yy);x.stroke();x.fillStyle=color('--lp-muted');x.fillText(n.toFixed(1),3,yy+4)}
  function line(rows,stroke){x.strokeStyle=stroke;x.lineWidth=1.8;x.beginPath();rows.forEach((p,i)=>{const xx=px(p.at),yy=py(p.index);if(i)x.lineTo(xx,yy);else x.moveTo(xx,yy);performancePoints.push({...p,x:xx,y:yy})});x.stroke()}
  line(drawHistory,color('--lp-history'));line(drawLive,color('--lp-green'));
  if(drawHistory.length&&drawLive.length){const a=historical.at(-1),b=live[0];x.setLineDash([5,5]);x.strokeStyle=color('--lp-muted');x.beginPath();x.moveTo(px(a.at),py(a.index));x.lineTo(px(b.at),py(b.index));x.stroke();x.setLineDash([])}
- if(live.length){const xx=px(live[0].at);x.setLineDash([3,5]);x.strokeStyle=color('--lp-muted');x.lineWidth=1;x.beginPath();x.moveTo(xx,15);x.lineTo(xx,h-35);x.stroke();x.setLineDash([]);x.fillStyle=color('--lp-muted');x.fillText('실제 시작',Math.max(50,Math.min(w-82,xx-70)),14)}
+ if(live.length){const xx=px(live[0].at);x.setLineDash([3,5]);x.strokeStyle=color('--lp-muted');x.lineWidth=1;x.beginPath();x.moveTo(xx,15);x.lineTo(xx,h-35);x.stroke();x.setLineDash([]);x.fillStyle=color('--lp-muted');x.fillText('Live start',Math.max(50,Math.min(w-82,xx-70)),14)}
  x.fillStyle=color('--lp-muted');x.fillText(new Date(begin*1000).toLocaleDateString('en-CA',{timeZone:'America/New_York'}),50,h-8);x.textAlign='right';x.fillText(new Date(end*1000).toLocaleDateString('en-CA',{timeZone:'America/New_York'})+' NY',w-18,h-8);x.textAlign='left';
- $('lp-performance-summary').textContent=(historical.length?`과거 재현 ${date(meta.simulation_start)} ~ ${date(meta.simulation_end)} NY · 수익률 ${pct(meta.net_return)} · 체결 ${meta.fills_count??0}회${meta.risk_halted?' · 위험 한도 도달':''} · `:'과거 재현 대기 · ')+`실제 Live 수익률 ${pct(current?.net_return)} · 연결 지수 ${all.at(-1).index.toFixed(2)}${meta.data_gap_seconds>300?' · 재현 종료~실제 시작 사이 데이터 공백 포함':''}`;
+ $('lp-performance-summary').textContent=(historical.length?`Historical replay ${date(meta.simulation_start)} ~ ${date(meta.simulation_end)} NY · Return ${pct(meta.net_return)} · Fills ${meta.fills_count??0}${meta.risk_halted?' · Risk limit reached':''} · `:'Historical replay pending · ')+`Observed live return ${pct(current?.net_return)} · Linked index ${all.at(-1).index.toFixed(2)}${meta.data_gap_seconds>300?' · Includes a data gap between replay and live start':''}`;
 }
 async function loadPerformance(force=false){
  if(!runId)return;
  if(!force&&performanceRun===runId&&performanceEpoch===authEpoch&&Date.now()-performanceAt<15000){renderPerformance();return}
  const requestedRun=runId,epoch=authEpoch;performanceAt=Date.now();if(performanceRun!==runId||performanceEpoch!==epoch){performanceData=null;performancePoints=[];renderPerformance()}
  try{const value=await rpc('lp_public_performance',{p_run:requestedRun});if(epoch!==authEpoch||requestedRun!==runId)return;performanceError=null;performanceData=value;performanceRun=runId;performanceEpoch=epoch;renderPerformance()}
- catch(e){if(epoch!==authEpoch||requestedRun!==runId)return;performanceError='연결 성과 그래프 설정 확인 필요 · Install-Live-History.cmd 실행 후 다시 확인하세요.';renderPerformance()}
+ catch(e){if(epoch!==authEpoch||requestedRun!==runId)return;performanceError='Performance chart setup required · Run Install-Live-History.cmd, then check again.';renderPerformance()}
 }
 for(const [id,view] of [['lp-performance-all','all'],['lp-performance-live','live']])$(id).addEventListener('click',()=>{performanceView=view;$('lp-performance-all').setAttribute('aria-pressed',String(view==='all'));$('lp-performance-live').setAttribute('aria-pressed',String(view==='live'));renderPerformance()});
-$('lp-performance-canvas').addEventListener('pointermove',e=>{if(!performancePoints.length)return;const box=e.currentTarget?.getBoundingClientRect?.()||$('lp-performance-canvas').getBoundingClientRect(),xx=e.clientX-box.left,point=performancePoints.reduce((a,b)=>Math.abs(b.x-xx)<Math.abs(a.x-xx)?b:a),tip=$('lp-tooltip');tip.hidden=false;tip.textContent=`${point.phase}\n${date(point.at)} NY\n연결 성과지수 ${point.index.toFixed(2)} (시작값 100)`;tip.style.left=Math.min(e.clientX+14,window.innerWidth-290)+'px';tip.style.top=Math.max(10,Math.min(e.clientY+14,window.innerHeight-145))+'px'});
+$('lp-performance-canvas').addEventListener('pointermove',e=>{if(!performancePoints.length)return;const box=e.currentTarget?.getBoundingClientRect?.()||$('lp-performance-canvas').getBoundingClientRect(),xx=e.clientX-box.left,point=performancePoints.reduce((a,b)=>Math.abs(b.x-xx)<Math.abs(a.x-xx)?b:a),tip=$('lp-tooltip');tip.hidden=false;tip.textContent=`${point.phase}\n${date(point.at)} NY\nLinked performance index ${point.index.toFixed(2)} (starting at 100)`;tip.style.left=Math.min(e.clientX+14,window.innerWidth-290)+'px';tip.style.top=Math.max(10,Math.min(e.clientY+14,window.innerHeight-145))+'px'});
 $('lp-performance-canvas').addEventListener('pointerleave',()=>{$('lp-tooltip').hidden=true});
 function renderFills(){
  $('lp-fill-count').textContent=`${current?.fills_count??fills.length} fills`;
- $('lp-fills').replaceChildren(...fills.slice(-100).reverse().map(f=>{const tr=el('tr');for(const v of [date(f.at),f.symbol,f.side==='buy'?'매수':'매도',Number(f.quantity).toLocaleString(),usd(f.price),usd(f.fee)])tr.append(el('td',v));tr.className=f.side==='buy'?'lp-buy':'lp-sell';return tr}));
+ $('lp-fills').replaceChildren(...fills.slice(-100).reverse().map(f=>{const tr=el('tr');for(const v of [date(f.at),f.symbol,f.side==='buy'?'Buy':'Sell',Number(f.quantity).toLocaleString('en-US'),usd(f.price),usd(f.fee)])tr.append(el('td',v));tr.className=f.side==='buy'?'lp-buy':'lp-sell';return tr}));
  for(const c of charts.values())c.draw();
 }
 class Chart{
  constructor(symbol){
   this.symbol=symbol;this.rows=new Map();this.offset=0;this.spacing=9;this.points=[];this.loading=false;this.exhausted=false;this.generation=0;
   const card=el('article',null,'lp-chart'),head=el('div',null,'lp-chart-head');head.append(el('strong',symbol),el('small',labels[symbol]));
-  this.canvas=el('canvas');this.canvas.setAttribute('aria-label',symbol+' 실시간 봉 차트와 가상 거래');this.canvas.tabIndex=0;this.note=el('p','시세 연결 대기','lp-chart-status');card.append(head,this.canvas,this.note);$('lp-charts').append(card);
+  this.canvas=el('canvas');this.canvas.setAttribute('aria-label',symbol+' live candlestick chart and paper executions');this.canvas.tabIndex=0;this.note=el('p','Waiting for market data','lp-chart-status');card.append(head,this.canvas,this.note);$('lp-charts').append(card);
   let drag=null;
   this.canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,offset:this.offset,moved:false};this.canvas.setPointerCapture?.(e.pointerId)});
   this.canvas.addEventListener('pointermove',e=>{if(drag&&Math.abs(e.clientX-drag.x)>5){drag.moved=true;this.offset=Math.max(0,drag.offset+Math.round((e.clientX-drag.x)/this.spacing));this.draw();if(this.offset+100>this.rows.size)this.load(true);$('lp-tooltip').hidden=true}else this.tooltip(e)});
@@ -86,11 +86,11 @@ class Chart{
   if(this.loading||older&&this.exhausted)return;this.loading=true;const generation=this.generation,frame=interval;
   try{const rows=[...this.rows.values()].sort((a,b)=>a.start-b.start),args={p_symbol:this.symbol,p_interval:frame,p_before:older&&rows.length?rows[0].start:null,p_after:!older&&rows.length?rows[Math.max(0,rows.length-3)].start:null};
    const value=await rpc('lp_public_bars',args);if(generation!==this.generation)return;
-   if(value.status!=='OK'){this.rows.clear();this.points=[];this.note.textContent='시세 공개/운영 연결을 기다리고 있습니다.';this.draw();return}
+   if(value.status!=='OK'){this.rows.clear();this.points=[];this.note.textContent='Waiting for market-data publication and the engine connection.';this.draw();return}
    let added=0;for(const row of value.bars||[]){if(!this.rows.has(row.start))added++;this.rows.set(row.start,row)}
    if(older&&!(value.bars||[]).length)this.exhausted=true;
    if(!older&&this.offset>0)this.offset+=added;
-   this.note.textContent=rows.length||this.rows.size?'드래그 이동 · 휠 확대/축소 · 거래 점 Hover / Click':'아직 수집된 봉이 없습니다.';this.draw();
+   this.note.textContent=rows.length||this.rows.size?'Drag to pan · Scroll to zoom · Hover or select trade markers':'No market bars have been collected yet.';this.draw();
   }catch(e){this.note.textContent=e.message}finally{if(generation===this.generation)this.loading=false}
  }
  draw(){
@@ -105,7 +105,7 @@ class Chart{
   x.fillStyle=color('--lp-muted');x.fillText(new Date(rows[0].start*1000).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}),left,h-8);
   x.textAlign='right';x.fillText(new Date(rows.at(-1).start*1000).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false})+' NY',w-56,h-8);x.textAlign='left';
  }
- tooltip(e){const box=this.canvas.getBoundingClientRect(),px=e.clientX-box.left,py=e.clientY-box.top,p=this.points.find(p=>Math.hypot(p.x-px,p.y-py)<12),tip=$('lp-tooltip');tip.hidden=!p;if(!p)return;const f=p.fill;tip.textContent=`${f.symbol} ${f.side==='buy'?'매수':'매도'} ${f.quantity}주\n${date(f.at)} NY\n가격 ${usd(f.price)} · 비용 ${usd(f.fee)}\n가상 주문 #${f.order_id}`;tip.style.left=Math.min(e.clientX+14,window.innerWidth-290)+'px';tip.style.top=Math.max(10,Math.min(e.clientY+14,window.innerHeight-145))+'px'}
+ tooltip(e){const box=this.canvas.getBoundingClientRect(),px=e.clientX-box.left,py=e.clientY-box.top,p=this.points.find(p=>Math.hypot(p.x-px,p.y-py)<12),tip=$('lp-tooltip');tip.hidden=!p;if(!p)return;const f=p.fill;tip.textContent=`${f.symbol} ${f.side==='buy'?'Buy':'Sell'} ${f.quantity} shares\n${date(f.at)} NY\nPrice ${usd(f.price)} · Fees ${usd(f.fee)}\nPaper order #${f.order_id}`;tip.style.left=Math.min(e.clientX+14,window.innerWidth-290)+'px';tip.style.top=Math.max(10,Math.min(e.clientY+14,window.innerHeight-145))+'px'}
 }
 for(const s of symbols)charts.set(s,new Chart(s));
 document.querySelectorAll('[data-interval]').forEach(button=>button.addEventListener('click',async()=>{interval=button.dataset.interval;document.querySelectorAll('[data-interval]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));for(const c of charts.values())c.reset();await Promise.all([...charts.values()].map(c=>c.load()))}));
@@ -114,16 +114,16 @@ async function poll(){if(busy)return;busy=true;const epoch=authEpoch;try{
  const value=await rpc('lp_public_state');if(epoch!==authEpoch)return;const previousHistory=current?.daily_review?.historical_replay?.status;status(value);runId=value.run_id;await loadPerformance(previousHistory!==value.daily_review?.historical_replay?.status);
  if(runId){const nextFills=await rpc('lp_public_fills',{p_run:runId});if(epoch!==authEpoch)return;fills=nextFills;renderFills()}
  await Promise.all([...charts.values()].map(c=>c.load()));
- if(admin){const own=await rpc('lp_admin_state');$('lp-admin-state').textContent=`${own.summary?.status||'WAITING'} · 모델 입력 주기 ${own.state?.portfolio?.interval||'초기 Dataset 설정 확인'} · ${own.state?.queued_model?'다음 거래일 모델 교체 대기':'교체 대기 없음'}${own.state?.feed_fault?' · 최근 데이터 장애 '+(own.state.feed_fault.code??'')+' '+own.state.feed_fault.reason:''}`;$('lp-commands').textContent=(own.commands||[]).slice(0,6).map(c=>`${c.kind}: ${c.status}${c.result?.message?' — '+c.result.message:''}`).join('\n')}
- }catch(e){$('lp-status').textContent='연결 대기 / 설정 확인';$('lp-updated').textContent=e.message}finally{busy=false}}
+ if(admin){const own=await rpc('lp_admin_state');$('lp-admin-state').textContent=`${own.summary?.status||'WAITING'} · Model input interval ${own.state?.portfolio?.interval||'Check the seed dataset settings'} · ${own.state?.queued_model?'Model switch queued for a future trading day':'No model switch queued'}${own.state?.feed_fault?' · Latest data fault '+(own.state.feed_fault.code??'')+' '+own.state.feed_fault.reason:''}`;$('lp-commands').textContent=(own.commands||[]).slice(0,6).map(c=>`${c.kind}: ${c.status}${c.result?.message?' — '+c.result.message:''}`).join('\n')}
+ }catch(e){$('lp-status').textContent='Waiting for connection / check settings';$('lp-updated').textContent=e.message}finally{busy=false}}
 function message(text){$('lp-admin-message').textContent=text}
-$('lp-login').addEventListener('submit',async e=>{e.preventDefault();try{const a=await request('/auth/v1/token?grant_type=password',{email:$('lp-email').value,password:$('lp-password').value},null);auth={...a,refresh_at:Date.now()+(a.expires_in-60)*1000};if(!await rpc('lp_is_admin')){auth=null;throw Error('허가된 관리자 계정이 아닙니다.')}admin=true;authEpoch++;$('lp-password').value='';$('lp-login').hidden=true;$('lp-admin-controls').hidden=false;for(const c of charts.values())c.reset();message('관리자 로그인 완료');await poll()}catch(e){auth=null;message(e.message)}});
-$('lp-logout').addEventListener('click',async()=>{if(auth)try{await request('/auth/v1/logout',{},auth.access_token)}catch{}authEpoch++;auth=null;admin=false;selectedModel=null;performanceData=null;performanceRun=null;performanceEpoch=-1;performancePoints=[];performanceError=null;status({status:'NOT_CONNECTED'});renderPerformance();$('lp-model').value='';$('lp-admin-controls').hidden=true;$('lp-login').hidden=false;for(const c of charts.values())c.reset();fills=[];renderFills();await poll();message('로그아웃했습니다.')});
-$('lp-model').addEventListener('change',async()=>{try{const f=$('lp-model').files[0];if(!f){selectedModel=null;return}if(f.size>8000000)throw Error('모델 JSON은 8 MB 이하여야 합니다.');selectedModel=JSON.parse(await f.text());message('모델을 읽었습니다. 시작/후보 등록 전에는 서버에 전송하지 않습니다.')}catch(e){selectedModel=null;message(e.message)}});
-async function command(kind,payload){if(!admin)throw Error('관리자 로그인이 필요합니다.');const id=await rpc('lp_submit_command',{p_kind:kind,p_payload:payload,p_key:crypto.randomUUID()});message('명령 접수 '+id+' · 운영 프로세스가 확인한 뒤 DONE 또는 REJECTED로 표시됩니다.');await poll()}
-$('lp-start').addEventListener('click',async()=>{try{if(!selectedModel&&!current?.started_at)throw Error('먼저 검증된 모델 JSON을 선택하세요.');const initial=Number($('lp-capital').value);if(!Number.isFinite(initial)||initial<100||initial>1e9)throw Error('초기자본을 확인하세요.');await command('START',{model:selectedModel,qualification_confirmed:$('lp-qualified').checked,execution_profile_confirmed:$('lp-costs').checked,extended_qualified:$('lp-extended').checked,session_policy:$('lp-session').value,profile:{initial_cash:initial,commission_per_share:.0035,minimum_commission:.35,sell_fee_rate:.0000206,spread_bps:2,slippage_bps:2,participation:.01,max_position:.25,label:'Owner-confirmed paper assumptions; not a broker fee quote'}})}catch(e){message(e.message)}});
+$('lp-login').addEventListener('submit',async e=>{e.preventDefault();try{const a=await request('/auth/v1/token?grant_type=password',{email:$('lp-email').value,password:$('lp-password').value},null);auth={...a,refresh_at:Date.now()+(a.expires_in-60)*1000};if(!await rpc('lp_is_admin')){auth=null;throw Error('This account is not an authorized administrator.')}admin=true;authEpoch++;$('lp-password').value='';$('lp-login').hidden=true;$('lp-admin-controls').hidden=false;for(const c of charts.values())c.reset();message('Administrator signed in');await poll()}catch(e){auth=null;message(e.message)}});
+$('lp-logout').addEventListener('click',async()=>{if(auth)try{await request('/auth/v1/logout',{},auth.access_token)}catch{}authEpoch++;auth=null;admin=false;selectedModel=null;performanceData=null;performanceRun=null;performanceEpoch=-1;performancePoints=[];performanceError=null;status({status:'NOT_CONNECTED'});renderPerformance();$('lp-model').value='';$('lp-admin-controls').hidden=true;$('lp-login').hidden=false;for(const c of charts.values())c.reset();fills=[];renderFills();await poll();message('Signed out.')});
+$('lp-model').addEventListener('change',async()=>{try{const f=$('lp-model').files[0];if(!f){selectedModel=null;return}if(f.size>8000000)throw Error('Model JSON must be no larger than 8 MB.');selectedModel=JSON.parse(await f.text());message('Model loaded locally. It is uploaded only when you start or stage it.')}catch(e){selectedModel=null;message(e.message)}});
+async function command(kind,payload){if(!admin)throw Error('Administrator sign-in is required.');const id=await rpc('lp_submit_command',{p_kind:kind,p_payload:payload,p_key:crypto.randomUUID()});message('Command received: '+id+' · The engine will mark it DONE or REJECTED after processing.');await poll()}
+$('lp-start').addEventListener('click',async()=>{try{if(!selectedModel&&!current?.started_at)throw Error('Select an evaluated model JSON first.');const initial=Number($('lp-capital').value);if(!Number.isFinite(initial)||initial<100||initial>1e9)throw Error('Check the initial capital.');await command('START',{model:selectedModel,qualification_confirmed:$('lp-qualified').checked,execution_profile_confirmed:$('lp-costs').checked,extended_qualified:$('lp-extended').checked,session_policy:$('lp-session').value,profile:{initial_cash:initial,commission_per_share:.0035,minimum_commission:.35,sell_fee_rate:.0000206,spread_bps:2,slippage_bps:2,participation:.01,max_position:.25,label:'Owner-confirmed paper assumptions; not a broker fee quote'}})}catch(e){message(e.message)}});
 $('lp-stop').addEventListener('click',async()=>{try{await command('STOP',{})}catch(e){message(e.message)}});
-$('lp-stage').addEventListener('click',async()=>{try{if(!selectedModel)throw Error('후보 모델 JSON을 선택하세요.');await command('STAGE_MODEL',{model:selectedModel,qualification_confirmed:$('lp-qualified').checked})}catch(e){message(e.message)}});
+$('lp-stage').addEventListener('click',async()=>{try{if(!selectedModel)throw Error('Select a candidate model JSON.');await command('STAGE_MODEL',{model:selectedModel,qualification_confirmed:$('lp-qualified').checked})}catch(e){message(e.message)}});
 $('lp-public-enable').addEventListener('click',async()=>{try{await command('SET_PUBLICATION',{enabled:$('lp-public-rights').checked,rights_confirmed:$('lp-public-rights').checked})}catch(e){message(e.message)}});
 window.addEventListener('resize',()=>{for(const c of charts.values())c.draw();renderPerformance()});window.addEventListener('site-theme-change',()=>{for(const c of charts.values())c.draw();renderPerformance()});
 setInterval(poll,5000);status({status:'NOT_CONNECTED'});renderPerformance();poll();

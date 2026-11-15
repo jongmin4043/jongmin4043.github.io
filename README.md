@@ -1,61 +1,45 @@
 # Jongmin Park — Personal Website
 
-A dark, responsive personal portfolio built for GitHub Pages. The site uses plain
-HTML, CSS, and JavaScript, so no front-end build step is required. The Data Pipeline
-page now includes a working canvas candlestick dashboard, a serverless collector,
-and a Supabase schema for completed 1-minute candles and future paper trades.
+An English-language personal portfolio on GitHub Pages, built with plain HTML, CSS and JavaScript. Dark and light themes share the same layout. No frontend build step is required.
 
-The public page starts in deterministic **Demo Mode**. Live public data remains
-locked until Korea Investment & Securities confirms redistribution permission.
+## Public pages
 
-## Publish with GitHub Pages
+- `index.html`: profile, interests, selected work and contact links.
+- `testing-machine.html`: Quant Live Lab, with UPRO, SPXU, TQQQ and SQQQ charts, completed virtual trades, portfolio statistics and authenticated administrator controls.
+- `project-footprint.html`: three concise milestones covering data, private research and live paper trading.
+- `quant-upcoming.html`: a placeholder for future projects.
 
-1. Sign in to GitHub and create a **public** repository named
-   `jongmin4043.github.io`.
-2. Upload every file in this folder to the root of the repository.
-3. Open **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select the `main` branch and the `/ (root)` folder, then click **Save**.
-6. Open `https://jongmin4043.github.io`. The first deployment can take several
-   minutes.
+The former standalone market-data dashboard has been removed from the site. Data collection and storage remain separate from the public page structure.
 
-## Files
+## Live Lab
 
-- `index.html` — page content and structure
-- `data-pipeline.html` — Data Pipeline project detail page
-- `data-pipeline-chart.js` — responsive candlestick chart and live REST polling
-- `pipeline-core.js` — candle validation, merge, and demo-stream logic
-- `pipeline-config.js` — public-only dashboard configuration
-- `cloud-run/` — Python/Flask KIS collector for Google Cloud Run
-- `supabase/` — database schema, RLS policies, and optional retention function
-- `PIPELINE_SETUP.md` — Korean step-by-step deployment and cost-control guide
-- `testing-machine.html` — Testing Machine project detail page
-- `quant-upcoming.html` — placeholder for upcoming quant projects
-- `style.css` — all visual styling and responsive layouts
-- `script.js` — reveal animation, navigation state, and pointer glow
-- `favicon.svg` — browser tab icon
+`live-paper.js` presents data from the existing Supabase configuration in `pipeline-config.js`. The private companion publishes records to Supabase; price updates are not GitHub commits. Historical replay is labelled as a retrospective simulation and is separate from observed live paper results. The linked performance index does not merge their cash or position ledgers.
 
-## Contact links
+The private engine, fitted models, coefficients, datasets, checkpoints and service credentials do not belong in this public repository. Administrator access is checked by authenticated server functions. Market-data publication remains subject to the existing authorization controls. No broker orders are sent.
 
-The contact panel includes public links for:
+See [LIVE_PAPER_SETUP.md](LIVE_PAPER_SETUP.md) for the companion workflow. `cloud-run/`, `supabase/` and [PIPELINE_SETUP.md](PIPELINE_SETUP.md) retain the earlier collector implementation and its archived operational notes; they are not deployment instructions for the current IBKR companion.
 
-- GitHub: `https://github.com/jongmin4043`
-- Instagram: `https://instagram.com/j0nmlnns_`
-- Email: `jongmin4043@snu.ac.kr`
+## Publish
 
-Update these values in `index.html` if any account details change.
+In the repository's **Settings → Pages**, publish the `main` branch from `/ (root)`. The site is available at https://jongmin4043.github.io.
 
-## Pipeline verification
+## Verify
 
 From the repository root:
 
 ```bash
-node --check pipeline-core.js
-node --check data-pipeline-chart.js
-node tests/pipeline-core.test.js
 python3 tests/validate_site.py
+node --check live-paper.js
+node tests/live-paper.test.cjs
+node tests/live-paper-history.test.cjs
+node tests/pipeline-core.test.js
 python3 -m unittest discover -s cloud-run/tests
 ```
 
-See [`PIPELINE_SETUP.md`](PIPELINE_SETUP.md) before entering any credentials or
-enabling public live data.
+The Live Lab tests use a DOM harness. They do not verify an actual browser, broker session or private account.
+
+## Contact
+
+- GitHub: https://github.com/jongmin4043
+- Instagram: https://instagram.com/j0nmlnns_
+- Email: jongmin4043@snu.ac.kr

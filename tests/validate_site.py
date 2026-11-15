@@ -22,12 +22,6 @@ class AssetParser(HTMLParser):
             self.assets.append(values["href"])
 
 
-required_ids = {
-    "pipeline-chart",
-    "pipeline-mode",
-    "stream-status",
-    "health-public",
-}
 failures = []
 
 for html_path in ROOT.glob("*.html"):
@@ -39,10 +33,6 @@ for html_path in ROOT.glob("*.html"):
         clean_asset = asset.split("?", 1)[0].split("#", 1)[0]
         if clean_asset and not (ROOT / clean_asset).exists():
             failures.append(f"{html_path.name}: missing local asset {clean_asset}")
-    if html_path.name == "data-pipeline.html":
-        missing_ids = required_ids - parser.ids
-        if missing_ids:
-            failures.append(f"data-pipeline.html: missing IDs {sorted(missing_ids)}")
     if html_path.name == "testing-machine.html":
         missing_ids = {"lp-charts", "lp-fills", "lp-status", "lp-stats", "lp-admin-controls"} - parser.ids
         if missing_ids:
